@@ -5,31 +5,16 @@ import {
   TileLayer,
   Marker,
   Polygon,
-  useMapEvents,
+  Popup,
 } from "react-leaflet";
-import { useState } from "react";
-
-function FlagPlacement({
-  setFlag,
-}: {
-  setFlag: (lat: number, lng: number) => void;
-}) {
-  useMapEvents({
-    click(e) {
-      setFlag(
-        e.latlng.lat,
-        e.latlng.lng
-      );
-    },
-  });
-
-  return null;
-}
+import { useEffect, useState } from "react";
 
 export default function GameField() {
-  const area = JSON.parse(
-    localStorage.getItem("playArea") || "[]"
-  );
+  const [playerPosition, setPlayerPosition] =
+    useState<[number, number] | null>(null);
+
+  const [playArea, setPlayArea] =
+    useState<[number, number][]>([]);
 
   const [redFlag, setRedFlag] =
     useState<[number, number] | null>(null);
@@ -37,71 +22,87 @@ export default function GameField() {
   const [blueFlag, setBlueFlag] =
     useState<[number, number] | null>(null);
 
-  const saveFlags = () => {
-    localStorage.setItem(
-      "redFlag",
-      JSON.stringify(redFlag)
+  useEffect(() => {
+    const area = JSON.parse(
+      localStorage.getItem("playArea") || "[]"
     );
 
-    localStorage.setItem(
-      "blueFlag",
-      JSON.stringify(blueFlag)
+    const red = JSON.parse(
+      localStorage.getItem("redFlag") || "null"
     );
 
-    alert("Vlaggen opgeslagen");
-  };
+    const blue = JSON.parse(
+      localStorage.getItem("blueFlag") || "null"
+    );
+
+    setPlayArea(area);
+    setRedFlag(red);
+    setBlueFlag(blue);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setPlayerPosition([
+          position.coords.latitude,
+          position.coords.longitude,
+        ]);
+      }
+    );
+  }, []);
+
+  if (!playerPosition) {
+    return (
+      <div className="text-xl">
+        GPS laden...
+      </div>
+    );
+  }
 
   return (
-    <>
-      <div
+    <div
+      style={{
+        height: "600px",
+        width: "100%",
+      }}
+    >
+      <MapContainer
+        center={playerPosition}
+        zoom={18}
         style={{
-          height: "500px",
+          height: "100%",
           width: "100%",
         }}
       >
-        <MapContainer
-          center={[52.045, 4.5]}
-          zoom={17}
-          style={{
-            height: "100%",
-            width: "100%",
-          }}
-        >
-          <TileLayer
-            attribution="OpenStreetMap"
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+        <TileLayer
+          attribution="OpenStreetMap"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
 
-          <FlagPlacement
-            setFlag={(lat, lng) => {
-              if (!redFlag) {
-                setRedFlag([lat, lng]);
-              } else {
-                setBlueFlag([lat, lng]);
-              }
-            }}
-          />
+        <Marker position={playerPosition}>
+          <Popup>
+            📍 Jij
+          </Popup>
+        </Marker>
 
-          {area.length >= 3 && (
-            <Polygon positions={area} />
-          )}
+        {playArea.length >= 3 && (
+          <Polygon positions={playArea} />
+        )}
 
-          {redFlag && (
-            <Marker position={redFlag} />
-          )}
+        {redFlag && (
+          <Marker position={redFlag}>
+            <Popup>
+              🚩 Rode Vlag
+            </Popup>
+          </Marker>
+        )}
 
-          {blueFlag && (
-            <Marker position={blueFlag} />
-          )}
-        </MapContainer>
-      </div>
-
-      <button
-        onClick={saveFlags}
-        className="bg-green-600 px-6 py-3 rounded-xl mt-4"
-      >
-        Vlaggen Opslaan
-      </button>
-    </>
+        {blueFlag && (
+          <Marker position={blueFlag}>
+            <Popup>
+              🚩 Blauwe Vlag
+            </Popup>
+          </Marker>
+        )}
+      </MapContainer>
+    </div>
   );
 }
