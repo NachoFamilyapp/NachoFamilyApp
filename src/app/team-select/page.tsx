@@ -20,10 +20,7 @@ export default function TeamSelectPage() {
         "gameCode"
       ) || "";
 
-    if (
-      !playerName ||
-      !gameCode
-    ) {
+    if (!playerName || !gameCode) {
       alert(
         "Speler of game niet gevonden"
       );
@@ -52,8 +49,7 @@ export default function TeamSelectPage() {
     const updatedPlayers =
       (data.players || []).map(
         (player: any) =>
-          player.name ===
-          playerName
+          player.name === playerName
             ? {
                 ...player,
                 team,
@@ -74,7 +70,7 @@ export default function TeamSelectPage() {
       team
     );
 
-    router.push("/game");
+    router.push("/lobby");
   };
 
   return (
@@ -86,24 +82,20 @@ export default function TeamSelectPage() {
       <div className="flex gap-6">
         <button
           onClick={() =>
-            selectTeam(
-              "red"
-            )
+            selectTeam("red")
           }
           className="bg-red-600 px-10 py-6 rounded-xl text-2xl"
         >
-          Team Rood
+          🔴 Team Rood
         </button>
 
         <button
           onClick={() =>
-            selectTeam(
-              "blue"
-            )
+            selectTeam("blue")
           }
           className="bg-blue-600 px-10 py-6 rounded-xl text-2xl"
         >
-          Team Blauw
+          🔵 Team Blauw
         </button>
       </div>
     </main>
