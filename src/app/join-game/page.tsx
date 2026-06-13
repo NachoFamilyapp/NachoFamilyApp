@@ -7,7 +7,6 @@ import {
   doc,
   getDoc,
   updateDoc,
-  arrayUnion,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
@@ -22,55 +21,97 @@ export default function JoinGamePage() {
     useState("");
 
   const joinGame = async () => {
-    if (
-      !playerName.trim() ||
-      !gameCode.trim()
-    ) {
-      alert(
-        "Vul naam en gamecode in"
+    try {
+      if (
+        !playerName.trim() ||
+        !gameCode.trim()
+      ) {
+        alert(
+          "Vul naam en gamecode in"
+        );
+        return;
+      }
+
+      const gameRef = doc(
+        db,
+        "games",
+        gameCode
       );
-      return;
-    }
 
-    const gameRef = doc(
-      db,
-      "games",
-      gameCode
-    );
+      const gameSnap =
+        await getDoc(gameRef);
 
-    const gameSnap =
-      await getDoc(gameRef);
+      if (!gameSnap.exists()) {
+        alert(
+          "Game bestaat niet"
+        );
+        return;
+      }
 
-    if (!gameSnap.exists()) {
-      alert(
-        "Game bestaat niet"
+      const data =
+        gameSnap.data();
+
+      const players =
+        data.players || [];
+
+      const playerExists =
+        players.some(
+          (player: any) =>
+            player.name ===
+            playerName
+        );
+
+      if (playerExists) {
+        alert(
+          "Naam is al in gebruik"
+        );
+        return;
+      }
+
+      await updateDoc(
+        gameRef,
+        {
+          players: [
+            ...players,
+            {
+              name: playerName,
+              host: false,
+              team: "",
+            },
+          ],
+        }
       );
-      return;
+
+      localStorage.setItem(
+        "playerName",
+        playerName
+      );
+
+      localStorage.setItem(
+        "gameCode",
+        gameCode
+      );
+
+      localStorage.setItem(
+        "host",
+        "false"
+      );
+
+      router.push(
+        "/lobby"
+      );
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "Join Game mislukt"
+      );
     }
-
-   await updateDoc(gameRef, {
-  players: arrayUnion({
-    name: playerName,
-    host: false,
-  }),
-});
-
-    localStorage.setItem(
-      "playerName",
-      playerName
-    );
-
-    localStorage.setItem(
-      "gameCode",
-      gameCode
-    );
-
-    router.push("/lobby");
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-green-900 text-white">
-      <h1 className="text-4xl font-bold mb-8">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-green-900 text-white px-6">
+      <h1 className="text-5xl font-bold mb-10">
         Spel Joinen
       </h1>
 
@@ -83,7 +124,7 @@ export default function JoinGamePage() {
             e.target.value
           )
         }
-        className="text-black p-3 rounded mb-4 w-72"
+        className="bg-white text-black p-4 rounded-xl mb-4 w-full max-w-sm border"
       />
 
       <input
@@ -95,12 +136,13 @@ export default function JoinGamePage() {
             e.target.value
           )
         }
-        className="text-black p-3 rounded mb-6 w-72"
+        className="bg-white text-black p-4 rounded-xl mb-8 w-full max-w-sm border"
       />
 
       <button
+        type="button"
         onClick={joinGame}
-        className="bg-red-600 px-6 py-3 rounded-xl"
+        className="bg-red-600 px-8 py-4 rounded-xl text-xl"
       >
         Join Game
       </button>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -7,12 +8,21 @@ import {
   Polygon,
   useMapEvents,
 } from "react-leaflet";
-import { useState } from "react";
+
+import {
+  doc,
+  updateDoc,
+} from "firebase/firestore";
+
+import { db } from "@/lib/firebase";
 
 function MapClickHandler({
   onAddPoint,
 }: {
-  onAddPoint: (lat: number, lng: number) => void;
+  onAddPoint: (
+    lat: number,
+    lng: number
+  ) => void;
 }) {
   useMapEvents({
     click(e) {
@@ -27,29 +37,66 @@ function MapClickHandler({
 }
 
 export default function MapPicker() {
-  const [points, setPoints] = useState<
-    [number, number][]
-  >([]);
+  const [points, setPoints] =
+    useState<
+      [number, number][]
+    >([]);
 
   const addPoint = (
     lat: number,
     lng: number
   ) => {
-    setPoints([
-      ...points,
+    setPoints((prev) => [
+      ...prev,
       [lat, lng],
     ]);
   };
 
-  const saveArea = () => {
-    localStorage.setItem(
-      "playArea",
-      JSON.stringify(points)
-    );
+  const saveArea = async () => {
+    try {
+      const gameCode =
+        localStorage.getItem(
+          "gameCode"
+        );
 
-    alert(
-      `${points.length} punten opgeslagen`
-    );
+      if (!gameCode) {
+        alert(
+          "Geen gamecode gevonden"
+        );
+        return;
+      }
+
+      const firebasePoints =
+        points.map(
+          ([lat, lng]) => ({
+            lat,
+            lng,
+          })
+        );
+
+      const gameRef = doc(
+        db,
+        "games",
+        gameCode
+      );
+
+      await updateDoc(
+        gameRef,
+        {
+          playArea:
+            firebasePoints,
+        }
+      );
+
+      alert(
+        "Speelgebied opgeslagen!"
+      );
+    } catch (error) {
+      console.error(error);
+      alert(
+        "Opslaan mislukt"
+      );
+    }
   };
 
   return (
@@ -77,28 +124,40 @@ export default function MapPicker() {
           />
 
           <MapClickHandler
-            onAddPoint={addPoint}
+            onAddPoint={
+              addPoint
+            }
           />
 
           {points.map(
-            (point, index) => (
+            (
+              point,
+              index
+            ) => (
               <Marker
                 key={index}
-                position={point}
+                position={
+                  point
+                }
               />
             )
           )}
 
-          {points.length >= 3 && (
+          {points.length >=
+            3 && (
             <Polygon
-              positions={points}
+              positions={
+                points
+              }
             />
           )}
         </MapContainer>
       </div>
 
       <button
-        onClick={saveArea}
+        onClick={
+          saveArea
+        }
         className="bg-green-600 px-6 py-3 rounded-xl mt-4"
       >
         Speelgebied Opslaan

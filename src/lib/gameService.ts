@@ -16,11 +16,20 @@ export async function createGame(
     {
       gameCode,
       hostName,
+
       status: "lobby",
+
+      playArea: [],
+
+      redFlag: null,
+
+      blueFlag: null,
+
       players: [
         {
           name: hostName,
           host: true,
+          team: "",
         },
       ],
     }
@@ -46,15 +55,35 @@ export async function joinGame(
     );
   }
 
-  const data = gameSnap.data();
+  const data =
+    gameSnap.data();
 
-  await updateDoc(gameRef, {
-    players: [
-      ...(data.players || []),
-      {
-        name: playerName,
-        host: false,
-      },
-    ],
-  });
+  const players =
+    data.players || [];
+
+  const playerExists =
+    players.some(
+      (player: any) =>
+        player.name === playerName
+    );
+
+  if (playerExists) {
+    throw new Error(
+      "Naam is al in gebruik"
+    );
+  }
+
+  await updateDoc(
+    gameRef,
+    {
+      players: [
+        ...players,
+        {
+          name: playerName,
+          host: false,
+          team: "",
+        },
+      ],
+    }
+  );
 }
