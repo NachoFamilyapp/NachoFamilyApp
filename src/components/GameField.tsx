@@ -12,6 +12,7 @@ import {
   doc,
   onSnapshot,
   updateDoc,
+  getDoc,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
@@ -22,6 +23,11 @@ import {
 } from "react";
 
 interface FirebasePoint {
+  lat: number;
+  lng: number;
+}
+
+interface Flag {
   lat: number;
   lng: number;
 }
@@ -49,6 +55,15 @@ export default function GameField() {
 
   const [players, setPlayers] =
     useState<Player[]>([]);
+
+  const [redFlag, setRedFlag] =
+    useState<Flag | null>(null);
+
+  const [blueFlag, setBlueFlag] =
+    useState<Flag | null>(null);
+
+  const [gpsTestMode, setGpsTestMode] =
+    useState(false);
 
   useEffect(() => {
     const gameCode =
@@ -101,6 +116,31 @@ export default function GameField() {
           setPlayers(
             data.players || []
           );
+
+          setRedFlag(
+            data.redFlag || null
+          );
+
+          setBlueFlag(
+            data.blueFlag || null
+          );
+
+          setGpsTestMode(
+            data.gpsTestMode ||
+              false
+          );
+
+          if (
+            data.gpsTestMode &&
+            data.testPosition
+          ) {
+            setPlayerPosition([
+              data.testPosition.lat,
+              data.testPosition.lng,
+            ]);
+
+            setGpsReady(true);
+          }
         }
       );
 
@@ -111,41 +151,44 @@ export default function GameField() {
         async (
           position
         ) => {
-          const lat =
-            position.coords.latitude;
-
-          const lng =
-            position.coords.longitude;
-
-          setPlayerPosition([
-            lat,
-            lng,
-          ]);
-
-          setGpsReady(true);
-
           try {
             const snap =
-              await import(
-                "firebase/firestore"
-              );
-
-            const docSnap =
-              await snap.getDoc(
+              await getDoc(
                 gameRef
               );
 
             if (
-              !docSnap.exists()
+              !snap.exists()
             )
               return;
 
-            const data =
-              docSnap.data();
+            const gameData =
+              snap.data();
+
+            if (
+              gameData.gpsTestMode
+            ) {
+              return;
+            }
+
+            const lat =
+              position.coords
+                .latitude;
+
+            const lng =
+              position.coords
+                .longitude;
+
+            setPlayerPosition([
+              lat,
+              lng,
+            ]);
+
+            setGpsReady(true);
 
             const updatedPlayers =
               (
-                data.players ||
+                gameData.players ||
                 []
               ).map(
                 (
@@ -182,18 +225,9 @@ export default function GameField() {
           }
         },
         (error) => {
-          alert(
-            "GPS fout\n\nCode: " +
-              error.code +
-              "\n\nBericht:\n" +
-              error.message
-          );
-
           console.error(
             error
           );
-
-          setGpsReady(false);
         },
         {
           enableHighAccuracy:
@@ -202,21 +236,76 @@ export default function GameField() {
           maximumAge: 0,
         }
       );
-    } else {
-      alert(
-        "Geolocatie wordt niet ondersteund door deze browser."
-      );
     }
 
     return () =>
       unsubscribe();
   }, []);
 
+  const teleportToFlag =
+    async (
+      flag:
+        | Flag
+        | null
+    ) => {
+      try {
+        if (!flag) {
+          alert(
+            "Vlag niet gevonden"
+          );
+          return;
+        }
+
+        setPlayerPosition([
+          flag.lat,
+          flag.lng,
+        ]);
+
+        setGpsReady(true);
+
+        alert(
+          "Teleport voltooid"
+        );
+      } catch (
+        error
+      ) {
+        console.error(
+          error
+        );
+      }
+    };
+
   return (
     <div>
       {!gpsReady && (
         <div className="bg-yellow-600 text-white p-3 rounded-xl mb-4">
           GPS nog niet beschikbaar.
+        </div>
+      )}
+
+      {gpsTestMode && (
+        <div className="flex flex-col gap-3 mb-4">
+          <button
+            onClick={() =>
+              teleportToFlag(
+                redFlag
+              )
+            }
+            className="bg-red-600 p-3 rounded-xl"
+          >
+            🚩 Naar Rode Vlag
+          </button>
+
+          <button
+            onClick={() =>
+              teleportToFlag(
+                blueFlag
+              )
+            }
+            className="bg-blue-600 p-3 rounded-xl"
+          >
+            🚩 Naar Blauwe Vlag
+          </button>
         </div>
       )}
 
@@ -247,16 +336,33 @@ export default function GameField() {
               positions={
                 playArea
               }
-              pathOptions={{
-                color:
-                  "blue",
-                fillColor:
-                  "blue",
-                fillOpacity:
-                  0.25,
-                weight: 4,
-              }}
             />
+          )}
+
+          {redFlag && (
+            <Marker
+              position={[
+                redFlag.lat,
+                redFlag.lng,
+              ]}
+            >
+              <Popup>
+                🚩 Rode Vlag
+              </Popup>
+            </Marker>
+          )}
+
+          {blueFlag && (
+            <Marker
+              position={[
+                blueFlag.lat,
+                blueFlag.lng,
+              ]}
+            >
+              <Popup>
+                🚩 Blauwe Vlag
+              </Popup>
+            </Marker>
           )}
 
           <Marker
@@ -289,14 +395,9 @@ export default function GameField() {
                   ]}
                 >
                   <Popup>
-                    {
-                      player.name
-                    }
+                    {player.name}
                     <br />
-                    Team:{" "}
-                    {
-                      player.team
-                    }
+                    Team: {player.team}
                   </Popup>
                 </Marker>
               );

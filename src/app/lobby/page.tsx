@@ -8,9 +8,12 @@ import {
   doc,
   onSnapshot,
   updateDoc,
+  getDoc,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
+
+import GameInfoBar from "@/components/GameInfoBar";
 
 interface Player {
   name: string;
@@ -24,9 +27,6 @@ export default function LobbyPage() {
   const [gameCode, setGameCode] =
     useState("");
 
-  const [playerName, setPlayerName] =
-    useState("");
-
   const [players, setPlayers] =
     useState<Player[]>([]);
 
@@ -35,15 +35,21 @@ export default function LobbyPage() {
 
   useEffect(() => {
     const storedCode =
-      localStorage.getItem("gameCode") || "";
+      localStorage.getItem(
+        "gameCode"
+      ) || "";
 
     const storedPlayer =
-      localStorage.getItem("playerName") || "";
+      localStorage.getItem(
+        "playerName"
+      ) || "";
 
-    setGameCode(storedCode);
-    setPlayerName(storedPlayer);
+    setGameCode(
+      storedCode
+    );
 
-    if (!storedCode) return;
+    if (!storedCode)
+      return;
 
     const gameRef = doc(
       db,
@@ -52,104 +58,266 @@ export default function LobbyPage() {
     );
 
     const unsubscribe =
-      onSnapshot(gameRef, (snapshot) => {
-        if (!snapshot.exists()) return;
+      onSnapshot(
+        gameRef,
+        (snapshot) => {
+          if (
+            !snapshot.exists()
+          )
+            return;
 
-        const data = snapshot.data();
+          const data =
+            snapshot.data();
 
-        setPlayers(data.players || []);
+          setPlayers(
+            data.players || []
+          );
 
-        if (data.status === "playing") {
-          router.push("/game");
+          if (
+            data.status ===
+            "playing"
+          ) {
+            router.push(
+              "/game"
+            );
+          }
+
+          const me =
+            data.players?.find(
+              (
+                p: Player
+              ) =>
+                p.name ===
+                storedPlayer
+            );
+
+          setIsHost(
+            me?.host ||
+              false
+          );
         }
+      );
 
-        const me = data.players?.find(
-          (p: Player) =>
-            p.name === storedPlayer
-        );
-
-        setIsHost(me?.host || false);
-      });
-
-    return () => unsubscribe();
+    return () =>
+      unsubscribe();
   }, [router]);
 
-  const startGame = async () => {
-    const gameRef = doc(
-      db,
-      "games",
-      gameCode
-    );
+  const startGame =
+    async () => {
+      try {
+        const gameRef = doc(
+          db,
+          "games",
+          gameCode
+        );
 
-    await updateDoc(gameRef, {
-      status: "playing",
-    });
-  };
+        const gameSnap =
+          await getDoc(
+            gameRef
+          );
+
+        if (
+          !gameSnap.exists()
+        ) {
+          alert(
+            "Game niet gevonden"
+          );
+          return;
+        }
+
+        const data =
+          gameSnap.data();
+
+        if (
+          !data.gameDuration &&
+          data.gameDuration !==
+            null
+        ) {
+          alert(
+            "⏱️ Kies eerst een timer"
+          );
+          return;
+        }
+
+        if (
+          !data.playArea ||
+          data.playArea
+            .length < 3
+        ) {
+          alert(
+            "🗺️ Maak eerst een speelgebied"
+          );
+          return;
+        }
+
+        const players =
+          data.players ||
+          [];
+
+        const missingTeam =
+          players.some(
+            (
+              player: Player
+            ) =>
+              !player.team
+          );
+
+        if (
+          missingTeam
+        ) {
+          alert(
+            "👥 Niet iedereen heeft een team gekozen"
+          );
+          return;
+        }
+
+        await updateDoc(
+          gameRef,
+          {
+            status:
+              "playing",
+            startTime:
+              Date.now(),
+          }
+        );
+      } catch (
+        error
+      ) {
+        console.error(
+          error
+        );
+
+        alert(
+          "Starten mislukt"
+        );
+      }
+    };
 
   return (
-    <main className="min-h-screen bg-green-900 text-white flex flex-col items-center p-8">
-      <h1 className="text-4xl font-bold mb-6">
-        Lobby
-      </h1>
-
-      <div className="bg-green-800 p-6 rounded-xl mb-6 w-full max-w-md text-center">
-        <div className="text-lg">
-          Game Code
-        </div>
-
-        <div className="text-4xl font-bold">
-          {gameCode}
-        </div>
-      </div>
-
-      <div className="bg-white text-black rounded-xl p-6 w-full max-w-md mb-6">
-        <h2 className="font-bold text-2xl mb-4">
-          Spelers
-        </h2>
-
-        {players.length === 0 ? (
-          <p>Geen spelers gevonden</p>
-        ) : (
-          players.map(
-            (player, index) => (
-              <div
-                key={index}
-                className="mb-3 text-lg"
-              >
-                {player.host && "👑 "}
-
-                {player.name}
-
-                {player.team === "red" &&
-                  " 🔴"}
-
-                {player.team === "blue" &&
-                  " 🔵"}
-              </div>
-            )
-          )
-        )}
-      </div>
-
-      <Link
-        href="/team-select"
-        className="bg-blue-600 px-8 py-4 rounded-xl text-xl mb-4"
-      >
-        Kies Team
-      </Link>
-
-      {isHost ? (
-        <button
-          onClick={startGame}
-          className="bg-green-600 px-8 py-4 rounded-xl text-xl"
+    <main className="min-h-screen bg-green-900 text-white">
+      <nav className="bg-green-950 border-b border-green-700 p-4 flex flex-wrap gap-2 justify-center">
+        <Link
+          href="/"
+          className="bg-green-700 px-4 py-2 rounded-xl font-bold"
         >
-          ▶ Start Spel
-        </button>
-      ) : (
-        <div className="text-xl">
-          ⏳ Wachten op host...
+          🏠 Home
+        </Link>
+
+        <Link
+          href="/create-game"
+          className="bg-blue-700 px-4 py-2 rounded-xl font-bold"
+        >
+          ➕ Nieuw
+        </Link>
+
+        <Link
+          href="/join-game"
+          className="bg-red-700 px-4 py-2 rounded-xl font-bold"
+        >
+          🎮 Join
+        </Link>
+
+        <Link
+          href="/admin"
+          className="bg-yellow-600 text-black px-4 py-2 rounded-xl font-bold"
+        >
+          ⚙️ Beheer
+        </Link>
+      </nav>
+
+      <div className="max-w-2xl mx-auto px-6 py-8">
+        <GameInfoBar />
+
+        <div className="bg-green-800 rounded-3xl p-8 mt-4 text-center">
+          <div className="text-6xl mb-4">
+            🎮
+          </div>
+
+          <h1 className="text-4xl font-bold mb-4">
+            Lobby
+          </h1>
+
+          <div className="text-green-100 mb-2">
+            Game Code
+          </div>
+
+          <div className="text-6xl font-bold tracking-widest">
+            {gameCode}
+          </div>
         </div>
-      )}
+
+        <div className="bg-white text-black rounded-3xl p-6 mt-6">
+          <h2 className="text-2xl font-bold mb-4">
+            👥 Spelers ({players.length})
+          </h2>
+
+          {players.length ===
+          0 ? (
+            <div>
+              Geen spelers gevonden
+            </div>
+          ) : (
+            players.map(
+              (
+                player,
+                index
+              ) => (
+                <div
+                  key={
+                    index
+                  }
+                  className="flex justify-between items-center border-b py-3"
+                >
+                  <div>
+                    {player.host &&
+                      "👑 "}
+                    {
+                      player.name
+                    }
+                  </div>
+
+                  <div>
+                    {player.team ===
+                      "red" &&
+                      "🔴"}
+
+                    {player.team ===
+                      "blue" &&
+                      "🔵"}
+
+                    {!player.team &&
+                      "⚪"}
+                  </div>
+                </div>
+              )
+            )
+          )}
+        </div>
+
+        <div className="grid gap-4 mt-6">
+          <Link
+            href="/team-select"
+            className="bg-blue-600 p-5 rounded-2xl text-center text-xl font-bold"
+          >
+            👥 Kies Team
+          </Link>
+
+          {isHost ? (
+            <button
+              onClick={
+                startGame
+              }
+              className="bg-green-600 p-5 rounded-2xl text-xl font-bold"
+            >
+              ▶️ Start Spel
+            </button>
+          ) : (
+            <div className="bg-yellow-600 text-center p-5 rounded-2xl text-xl font-bold">
+              ⏳ Wachten op host...
+            </div>
+          )}
+        </div>
+      </div>
     </main>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import {
   doc,
@@ -32,10 +33,13 @@ export default function JoinGamePage() {
         return;
       }
 
+      const cleanGameCode =
+        gameCode.trim();
+
       const gameRef = doc(
         db,
         "games",
-        gameCode
+        cleanGameCode
       );
 
       const gameSnap =
@@ -89,7 +93,7 @@ export default function JoinGamePage() {
 
       localStorage.setItem(
         "gameCode",
-        gameCode
+        cleanGameCode
       );
 
       localStorage.setItem(
@@ -101,7 +105,9 @@ export default function JoinGamePage() {
         "/lobby"
       );
     } catch (error) {
-      console.error(error);
+      console.error(
+        error
+      );
 
       alert(
         "Join Game mislukt"
@@ -110,42 +116,105 @@ export default function JoinGamePage() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-green-900 text-white px-6">
-      <h1 className="text-5xl font-bold mb-10">
-        Spel Joinen
-      </h1>
+    <main className="min-h-screen bg-green-900 text-white">
+      <nav className="bg-green-950 border-b border-green-700 p-4 flex flex-wrap gap-2 justify-center">
+        <Link
+          href="/"
+          className="bg-green-700 px-4 py-2 rounded-xl font-bold"
+        >
+          🏠 Home
+        </Link>
 
-      <input
-        type="text"
-        placeholder="Jouw naam"
-        value={playerName}
-        onChange={(e) =>
-          setPlayerName(
-            e.target.value
-          )
-        }
-        className="bg-white text-black p-4 rounded-xl mb-4 w-full max-w-sm border"
-      />
+        <Link
+          href="/create-game"
+          className="bg-blue-700 px-4 py-2 rounded-xl font-bold"
+        >
+          ➕ Nieuw
+        </Link>
 
-      <input
-        type="text"
-        placeholder="Game Code"
-        value={gameCode}
-        onChange={(e) =>
-          setGameCode(
-            e.target.value
-          )
-        }
-        className="bg-white text-black p-4 rounded-xl mb-8 w-full max-w-sm border"
-      />
+        <Link
+          href="/lobby"
+          className="bg-purple-700 px-4 py-2 rounded-xl font-bold"
+        >
+          👥 Lobby
+        </Link>
 
-      <button
-        type="button"
-        onClick={joinGame}
-        className="bg-red-600 px-8 py-4 rounded-xl text-xl"
-      >
-        Join Game
-      </button>
+        <Link
+          href="/admin"
+          className="bg-yellow-600 text-black px-4 py-2 rounded-xl font-bold"
+        >
+          ⚙️ Beheer
+        </Link>
+      </nav>
+
+      <div className="max-w-md mx-auto px-6 py-12">
+        <div className="bg-green-800 rounded-3xl p-8 shadow-xl">
+          <div className="text-center mb-8">
+            <div className="text-6xl mb-4">
+              🎮
+            </div>
+
+            <h1 className="text-4xl font-bold mb-2">
+              Spel Joinen
+            </h1>
+
+            <p className="text-green-100">
+              Doe mee met een bestaand spel
+            </p>
+          </div>
+
+          <div className="mb-5">
+            <label className="block mb-2 font-bold">
+              Jouw Naam
+            </label>
+
+            <input
+              type="text"
+              placeholder="Bijvoorbeeld: Papa"
+              value={playerName}
+              onChange={(e) =>
+                setPlayerName(
+                  e.target.value
+                )
+              }
+              className="w-full p-4 rounded-xl text-black text-lg"
+            />
+          </div>
+
+          <div className="mb-6">
+            <label className="block mb-2 font-bold">
+              Game Code
+            </label>
+
+            <input
+              type="text"
+              placeholder="1234"
+              value={gameCode}
+              onChange={(e) =>
+                setGameCode(
+                  e.target.value
+                )
+              }
+              className="w-full p-4 rounded-xl text-black text-lg text-center font-bold tracking-widest"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={joinGame}
+            className="w-full bg-red-600 hover:bg-red-500 p-4 rounded-xl text-xl font-bold"
+          >
+            🚀 Join Game
+          </button>
+
+          <Link
+            href="/create-game"
+            className="block text-center mt-6 text-green-100 underline"
+          >
+            Nog geen spel aangemaakt?
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }

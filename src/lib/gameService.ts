@@ -22,8 +22,20 @@ export async function createGame(
       playArea: [],
 
       redFlag: null,
-
       blueFlag: null,
+
+      redFlagCaptured: false,
+      blueFlagCaptured: false,
+
+      winner: null,
+
+      gameDuration: null,
+
+      startTime: null,
+
+      gpsTestMode: false,
+
+      testPosition: null,
 
       players: [
         {
