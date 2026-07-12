@@ -2,7 +2,15 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
+import {
+  doc,
+  onSnapshot,
+} from "firebase/firestore";
+
+import { db } from "@/lib/firebase";
 import GameInfoBar from "@/components/GameInfoBar";
 
 const GameField = dynamic(
@@ -13,6 +21,44 @@ const GameField = dynamic(
 );
 
 export default function GamePage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const gameCode =
+      localStorage.getItem("gameCode");
+
+    if (!gameCode) {
+      return;
+    }
+
+    const gameRef = doc(
+      db,
+      "games",
+      gameCode
+    );
+
+    const unsubscribe = onSnapshot(
+      gameRef,
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          return;
+        }
+
+        const data = snapshot.data();
+
+        if (
+          data.status === "finished" ||
+          data.winner ||
+          data.winnerTeam
+        ) {
+          router.push("/results");
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, [router]);
+
   return (
     <main className="min-h-screen bg-green-900 text-white">
       <nav className="bg-green-950 border-b border-green-700 p-4 flex flex-wrap gap-2 justify-center">
