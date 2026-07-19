@@ -46,7 +46,7 @@ export default function CreateGamePage() {
   }
     return (
 
-    <main className="min-h-screen bg-green-900 text-white">
+    <main className="min-h-screen bg-black/30 backdrop-blur-sm text-white">
 
       <nav className="flex flex-wrap justify-center gap-2 border-b border-green-700 bg-green-950 p-4">
 
@@ -113,7 +113,7 @@ export default function CreateGamePage() {
               onChange={(e) =>
                 setPlayerName(e.target.value)
               }
-              className="w-full rounded-xl p-4 text-lg text-black"
+              className="w-full rounded-xl p-4 text-lg text-black bg-white border-2 border-white/50 focus:border-blue-400 outline-none"
             />
 
           </div>

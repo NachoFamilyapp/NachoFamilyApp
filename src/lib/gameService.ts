@@ -74,6 +74,7 @@ export class GameService {
       friendlyFire: false,
       gpsAccuracy: 20,
       scoreLimit: 3,
+      theme: "grasveld",
     },
 
     winner: null,

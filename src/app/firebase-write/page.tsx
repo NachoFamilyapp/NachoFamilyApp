@@ -18,7 +18,7 @@ export default function FirebaseWritePage() {
   };
 
   return (
-    <main className="min-h-screen bg-green-900 text-white p-8">
+    <main className="min-h-screen bg-black/30 backdrop-blur-sm text-white p-8">
       <h1 className="text-4xl mb-6">
         Firebase Write Test
       </h1>

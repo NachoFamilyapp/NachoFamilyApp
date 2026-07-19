@@ -25,6 +25,7 @@ export interface GameSettings {
   friendlyFire: boolean;
   gpsAccuracy: number;
   scoreLimit: number;
+  theme: string;
 }
 
 export interface Player {

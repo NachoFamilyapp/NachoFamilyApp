@@ -89,7 +89,7 @@ export default function TeamSelectPage() {
   }
     return (
 
-    <main className="min-h-screen bg-green-900 text-white">
+    <main className="min-h-screen bg-black/30 backdrop-blur-sm text-white">
 
       <nav className="border-b border-green-700 bg-green-950">
 
@@ -175,7 +175,7 @@ export default function TeamSelectPage() {
 
           </div>
 
-          <div className="mt-8 rounded-2xl bg-green-900 p-4 text-center text-sm text-green-200">
+          <div className="mt-8 rounded-2xl bg-black/30 backdrop-blur-sm p-4 text-center text-sm text-green-200">
 
             Je keuze wordt direct realtime opgeslagen.
             Daarna ga je automatisch terug naar de lobby.

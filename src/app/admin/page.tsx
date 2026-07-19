@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import {
@@ -10,8 +10,10 @@ import {
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
+import GameService from "@/lib/gameService";
 
 import GameInfoBar from "@/components/GameInfoBar";
+import { Backgrounds } from "@/config/backgrounds";
 
 const MapPicker = dynamic(
   () => import("@/components/MapPicker"),
@@ -28,6 +30,27 @@ export default function AdminPage() {
 
   const [gpsTestMode, setGpsTestMode] =
     useState(false);
+
+  const [theme, setTheme] =
+    useState("grasveld");
+
+  useEffect(() => {
+    const gameCode = GameService.getStoredGameCode();
+
+    if (!gameCode) return;
+
+    GameService.getGame(gameCode).then((game) => {
+      if (!game) return;
+
+      setDuration(
+        game.settings.gameDuration >= 86400
+          ? null
+          : game.settings.gameDuration
+      );
+      setGpsTestMode(Boolean(game.gpsTestMode));
+      setTheme(game.settings.theme ?? "grasveld");
+    });
+  }, []);
 
   const saveSettings =
     async () => {
@@ -55,6 +78,8 @@ export default function AdminPage() {
           {
             "settings.gameDuration":
               duration ?? 86400,
+            "settings.theme":
+              theme,
             gpsTestMode:
               gpsTestMode,
           }
@@ -75,7 +100,7 @@ export default function AdminPage() {
     };
 
   return (
-    <main className="min-h-screen bg-green-900 text-white">
+    <main className="min-h-screen bg-black/30 backdrop-blur-sm text-white">
       <nav className="bg-green-950 border-b border-green-700 p-4 flex flex-wrap gap-2 justify-center">
         <Link
           href="/"
@@ -109,7 +134,7 @@ export default function AdminPage() {
       <div className="max-w-5xl mx-auto px-6 py-8">
         <GameInfoBar />
 
-        <div className="bg-green-800 rounded-3xl p-8 mt-4">
+        <div className="bg-black/30 backdrop-blur-sm rounded-3xl p-8 mt-4">
           <div className="text-center mb-8">
             <div className="text-6xl mb-4">
               ⚙️
@@ -244,7 +269,33 @@ export default function AdminPage() {
           </button>
         </div>
 
-        <div className="bg-green-800 rounded-3xl p-8 mt-6">
+        <div className="bg-black/30 backdrop-blur-sm rounded-3xl p-8 mt-6">
+          <h2 className="text-2xl font-bold mb-4">
+            🎨 Achtergrond
+          </h2>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+            {Backgrounds.map((bg) => (
+              <button
+                key={bg.id}
+                onClick={() => setTheme(bg.id)}
+                className={`rounded-xl p-4 font-bold text-white bg-gradient-to-b ${bg.gradient} ${
+                  theme === bg.id
+                    ? "ring-4 ring-white"
+                    : "opacity-70"
+                }`}
+              >
+                {bg.icon} {bg.name}
+              </button>
+            ))}
+          </div>
+
+          <p className="text-sm opacity-80">
+            Deze achtergrond geldt voor alle spelers in dit spel, op elk scherm.
+          </p>
+        </div>
+
+        <div className="bg-black/30 backdrop-blur-sm rounded-3xl p-8 mt-6">
           <h2 className="text-3xl font-bold mb-6">
             🗺️ Speelgebied & Vlaggen
           </h2>

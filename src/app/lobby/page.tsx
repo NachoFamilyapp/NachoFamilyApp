@@ -131,7 +131,7 @@ export default function LobbyPage() {
 
     return (
 
-      <main className="flex min-h-screen items-center justify-center bg-green-900 text-white">
+      <main className="flex min-h-screen items-center justify-center bg-black/30 backdrop-blur-sm text-white">
 
         <div className="text-3xl font-bold">
 
@@ -149,7 +149,7 @@ export default function LobbyPage() {
 
     return (
 
-      <main className="flex min-h-screen items-center justify-center bg-red-900 text-white">
+      <main className="flex min-h-screen items-center justify-center bg-red-950/60 backdrop-blur-sm text-white">
 
         <div className="text-3xl font-bold">
 
@@ -164,7 +164,7 @@ export default function LobbyPage() {
   }
     return (
 
-    <main className="min-h-screen bg-green-900 text-white">
+    <main className="min-h-screen bg-black/30 backdrop-blur-sm text-white">
 
       <nav className="border-b border-green-700 bg-green-950">
 

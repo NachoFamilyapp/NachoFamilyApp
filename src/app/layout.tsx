@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 import GameProvider from "@/components/GameProvider";
+import ThemedBackground from "@/components/ThemedBackground";
 
 export const metadata: Metadata = {
   title: "NachoFamilyApp",
@@ -25,17 +26,15 @@ export default function RootLayout({
     <html lang="nl">
       <body
         className="
-          bg-gradient-to-b
-          from-green-500
-          via-green-400
-          to-blue-400
+          min-h-screen
           text-white
-          overflow-hidden
           touch-manipulation
           select-none
         "
       >
-        <GameProvider>{children}</GameProvider>
+        <GameProvider>
+          <ThemedBackground>{children}</ThemedBackground>
+        </GameProvider>
       </body>
     </html>
   );

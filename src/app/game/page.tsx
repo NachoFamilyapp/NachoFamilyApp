@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 
-import GameProvider, { useGame } from "@/components/GameProvider";
+import { useGame } from "@/components/GameProvider";
 import GameControls from "@/components/GameControls";
 import GameInfoBar from "@/components/GameInfoBar";
 
@@ -20,7 +20,7 @@ const GameMap = dynamic(
   }
 );
 
-function GamePageContent() {
+export default function GamePage() {
 
   const { game } = useGame();
 
@@ -38,18 +38,6 @@ function GamePageContent() {
       <GameMap />
 
     </main>
-  );
-
-}
-
-export default function GamePage() {
-
-  return (
-
-    <GameProvider>
-      <GamePageContent />
-    </GameProvider>
-
   );
 
 }

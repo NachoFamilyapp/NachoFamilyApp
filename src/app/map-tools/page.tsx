@@ -97,7 +97,7 @@ export default function MapToolsPage() {
     };
 
   return (
-    <main className="min-h-screen bg-green-900 p-6 text-white">
+    <main className="min-h-screen bg-black/30 backdrop-blur-sm p-6 text-white">
       <div className="mx-auto max-w-5xl">
         <div className="rounded-3xl bg-green-800 p-8">
           <h1 className="mb-6 text-4xl font-bold">

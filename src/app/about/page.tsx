@@ -5,7 +5,7 @@ import Card from "@/components/ui/Card";
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-green-900 text-white p-6">
+    <main className="min-h-screen bg-black/30 backdrop-blur-sm text-white p-6">
       <div className="mx-auto max-w-2xl">
         <div className="text-center mb-8">
           <div className="text-6xl mb-3">📖</div>

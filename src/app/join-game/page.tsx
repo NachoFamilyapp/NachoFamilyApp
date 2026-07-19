@@ -47,7 +47,7 @@ export default function JoinGamePage() {
   }
 
   return (
-    <main className="min-h-screen bg-green-900 text-white">
+    <main className="min-h-screen bg-black/30 backdrop-blur-sm text-white">
       <nav className="bg-green-950 border-b border-green-700 p-4 flex flex-wrap gap-2 justify-center">
         <Link
           href="/"
@@ -107,7 +107,7 @@ export default function JoinGamePage() {
                 setPlayerName(e.target.value)
               }
               placeholder="Bijvoorbeeld: Papa"
-              className="w-full rounded-xl p-4 text-black"
+              className="w-full rounded-xl p-4 text-black bg-white border-2 border-white/50 focus:border-red-400 outline-none"
             />
           </div>
 
@@ -126,7 +126,7 @@ export default function JoinGamePage() {
               }
               placeholder="1234"
               maxLength={4}
-              className="w-full rounded-xl p-4 text-black text-center text-2xl tracking-[0.4em] font-bold"
+              className="w-full rounded-xl p-4 text-black bg-white border-2 border-white/50 focus:border-red-400 outline-none text-center text-2xl tracking-[0.4em] font-bold"
             />
           </div>
 

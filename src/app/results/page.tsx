@@ -77,7 +77,7 @@ export default function ResultsPage() {
         : "ONBEKEND";
 
   return (
-    <main className="min-h-screen bg-green-900 text-white">
+    <main className="min-h-screen bg-black/30 backdrop-blur-sm text-white">
       <div className="mx-auto max-w-2xl px-4 py-8">
         <GameInfoBar />
 
