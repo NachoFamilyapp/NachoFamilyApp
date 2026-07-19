@@ -4,151 +4,140 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import { createGame } from "@/lib/gameService";
+import GameService from "@/lib/gameService";
 
 export default function CreateGamePage() {
+
   const router = useRouter();
 
   const [playerName, setPlayerName] =
     useState("");
 
-  const createGameHandler =
-    async () => {
-      try {
-        if (
-          !playerName.trim()
-        ) {
-          alert(
-            "Vul eerst je naam in"
-          );
-          return;
-        }
+  async function createGameHandler() {
 
-        const gameCode =
-          Math.floor(
-            1000 +
-              Math.random() *
-                9000
-          ).toString();
+    try {
 
-        await createGame(
-          gameCode,
-          playerName
-        );
+      if (!playerName.trim()) {
 
-        localStorage.setItem(
-          "playerName",
-          playerName
-        );
+        alert("Vul eerst je naam in.");
 
-        localStorage.setItem(
-          "gameCode",
-          gameCode
-        );
+        return;
 
-        localStorage.setItem(
-          "host",
-          "true"
-        );
-
-        router.push(
-          "/lobby"
-        );
-      } catch (error) {
-        console.error(
-          error
-        );
-
-        alert(
-          "Spel maken mislukt"
-        );
       }
-    };
 
-  return (
+      const game = await GameService.createGame(
+        playerName.trim()
+      );
+
+      router.push("/lobby");
+
+    } catch (error) {
+
+  console.error("CREATE GAME ERROR:", error);
+
+  alert(
+    error instanceof Error
+      ? error.message
+      : String(error)
+  );
+
+}
+
+  }
+    return (
+
     <main className="min-h-screen bg-green-900 text-white">
-      <nav className="bg-green-950 border-b border-green-700 p-4 flex flex-wrap gap-2 justify-center">
+
+      <nav className="flex flex-wrap justify-center gap-2 border-b border-green-700 bg-green-950 p-4">
+
         <Link
           href="/"
-          className="bg-green-700 px-4 py-2 rounded-xl font-bold"
+          className="rounded-xl bg-green-700 px-4 py-2 font-bold"
         >
           🏠 Home
         </Link>
 
         <Link
           href="/join-game"
-          className="bg-red-700 px-4 py-2 rounded-xl font-bold"
+          className="rounded-xl bg-red-700 px-4 py-2 font-bold"
         >
           🎮 Join
         </Link>
 
         <Link
           href="/lobby"
-          className="bg-blue-700 px-4 py-2 rounded-xl font-bold"
+          className="rounded-xl bg-blue-700 px-4 py-2 font-bold"
         >
           👥 Lobby
         </Link>
 
         <Link
           href="/admin"
-          className="bg-yellow-600 text-black px-4 py-2 rounded-xl font-bold"
+          className="rounded-xl bg-yellow-600 px-4 py-2 font-bold text-black"
         >
           ⚙️ Beheer
         </Link>
+
       </nav>
 
-      <div className="max-w-md mx-auto px-6 py-12">
-        <div className="bg-green-800 rounded-3xl p-8 shadow-xl">
-          <div className="text-center mb-8">
-            <div className="text-6xl mb-4">
+      <div className="mx-auto max-w-md px-6 py-12">
+
+        <div className="rounded-3xl bg-green-800 p-8 shadow-xl">
+
+          <div className="mb-8 text-center">
+
+            <div className="mb-4 text-6xl">
               ➕
             </div>
 
-            <h1 className="text-4xl font-bold mb-2">
+            <h1 className="mb-2 text-4xl font-bold">
               Nieuw Spel
             </h1>
 
             <p className="text-green-100">
               Maak een nieuw spel aan
             </p>
+
           </div>
 
           <div className="mb-6">
-            <label className="block mb-2 font-bold">
-              Jouw Naam
+
+            <label className="mb-2 block font-bold">
+              Jouw naam
             </label>
 
             <input
               type="text"
-              placeholder="Bijvoorbeeld: Papa"
               value={playerName}
+              placeholder="Bijvoorbeeld: Papa"
               onChange={(e) =>
-                setPlayerName(
-                  e.target.value
-                )
+                setPlayerName(e.target.value)
               }
-              className="w-full p-4 rounded-xl text-black text-lg"
+              className="w-full rounded-xl p-4 text-lg text-black"
             />
+
           </div>
 
           <button
             type="button"
-            onClick={
-              createGameHandler
-            }
-            className="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-xl text-xl font-bold"
+            onClick={createGameHandler}
+            className="w-full rounded-xl bg-blue-600 p-4 text-xl font-bold hover:bg-blue-500"
           >
             🚀 Maak Spel
           </button>
-
-          <Link
+                    <Link
             href="/join-game"
-            className="block text-center mt-6 text-green-100 underline"
+            className="mt-6 block text-center text-green-100 underline"
           >
-            Heb je al een game code?
+            Heb je al een gamecode?
           </Link>
+
         </div>
+
       </div>
+
     </main>
+
   );
+
 }

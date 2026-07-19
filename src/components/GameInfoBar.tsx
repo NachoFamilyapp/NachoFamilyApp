@@ -1,238 +1,85 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  doc,
-  onSnapshot,
-} from "firebase/firestore";
-
-import { db } from "@/lib/firebase";
+import { useEffect, useState } from "react";
+import { useGame } from "@/components/GameProvider";
 
 export default function GameInfoBar() {
-  const [gameCode, setGameCode] =
-    useState("");
+  const { game, player } = useGame();
 
-  const [playerName, setPlayerName] =
-    useState("");
-
-  const [team, setTeam] =
-    useState("");
-
-  const [timeLeft, setTimeLeft] =
-    useState("");
-
-  const [status, setStatus] =
-    useState("lobby");
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    const storedGameCode =
-      localStorage.getItem(
-        "gameCode"
-      ) || "";
+    if (game?.status !== "running") return;
 
-    const storedPlayerName =
-      localStorage.getItem(
-        "playerName"
-      ) || "";
+    const interval = setInterval(() => setNow(Date.now()), 1000);
 
-    const storedTeam =
-      localStorage.getItem(
-        "team"
-      ) || "";
+    return () => clearInterval(interval);
+  }, [game?.status]);
 
-    setGameCode(
-      storedGameCode
+  let timeLeft = "—";
+
+  if (
+    game &&
+    game.status === "running" &&
+    game.startTime &&
+    game.settings?.gameDuration
+  ) {
+    const end = game.startTime + game.settings.gameDuration * 1000;
+    const remaining = Math.max(0, end - now);
+
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+
+    timeLeft = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  }
+
+  if (!game) {
+    return (
+      <div className="rounded-2xl bg-green-800 p-4">
+        Spel laden...
+      </div>
     );
-
-    setPlayerName(
-      storedPlayerName
-    );
-
-    setTeam(
-      storedTeam
-    );
-
-    if (!storedGameCode)
-      return;
-
-    const gameRef = doc(
-      db,
-      "games",
-      storedGameCode
-    );
-
-    const unsubscribe =
-      onSnapshot(
-        gameRef,
-        (snapshot) => {
-          if (
-            !snapshot.exists()
-          )
-            return;
-
-          const data =
-            snapshot.data();
-
-          setStatus(
-            data.status ||
-              "lobby"
-          );
-
-          if (
-            !data.startTime ||
-            data.gameDuration ===
-              null
-          ) {
-            setTimeLeft(
-              "♾️"
-            );
-            return;
-          }
-
-          const updateTimer =
-            () => {
-              const endTime =
-                data.startTime +
-                data.gameDuration *
-                  1000;
-
-              const remaining =
-                Math.max(
-                  0,
-                  endTime -
-                    Date.now()
-                );
-
-              const minutes =
-                Math.floor(
-                  remaining /
-                    60000
-                );
-
-              const seconds =
-                Math.floor(
-                  (
-                    remaining %
-                    60000
-                  ) / 1000
-                );
-
-              setTimeLeft(
-                `${minutes}:${seconds
-                  .toString()
-                  .padStart(
-                    2,
-                    "0"
-                  )}`
-              );
-            };
-
-          updateTimer();
-
-          const interval =
-            setInterval(
-              updateTimer,
-              1000
-            );
-
-          return () =>
-            clearInterval(
-              interval
-            );
-        }
-      );
-
-    return () =>
-      unsubscribe();
-  }, []);
+  }
 
   return (
-    <div className="bg-green-800 rounded-2xl p-4 shadow-lg">
-      <div className="grid md:grid-cols-4 gap-3 text-center">
-        <div className="bg-green-700 rounded-xl p-3">
-          <div className="text-sm">
-            Game
-          </div>
-
-          <div className="font-bold text-xl">
-            {gameCode ||
-              "-"}
+    <div className="rounded-2xl bg-green-800 p-4 shadow-lg">
+      <div className="grid gap-3 text-center md:grid-cols-4">
+        <div className="rounded-xl bg-green-700 p-3">
+          <div className="text-sm">Game</div>
+          <div className="text-xl font-bold">
+            {game.gameCode}
           </div>
         </div>
 
-        <div className="bg-green-700 rounded-xl p-3">
-          <div className="text-sm">
-            Speler
-          </div>
-
+        <div className="rounded-xl bg-green-700 p-3">
+          <div className="text-sm">Speler</div>
           <div className="font-bold">
-            {playerName ||
-              "-"}
+            {player?.name ?? "-"}
           </div>
         </div>
 
-        <div className="bg-green-700 rounded-xl p-3">
-          <div className="text-sm">
-            Team
-          </div>
-
+        <div className="rounded-xl bg-green-700 p-3">
+          <div className="text-sm">Team</div>
           <div className="font-bold">
-            {team === "red" &&
-              "🔴 Rood"}
-
-            {team ===
-              "blue" &&
-              "🔵 Blauw"}
-
-            {team ===
-              "green" &&
-              "🟢 Groen"}
-
-            {team ===
-              "yellow" &&
-              "🟡 Geel"}
-
-            {!team &&
-              "⚪ Geen"}
+            {player?.team === "red" && "🔴 Rood"}
+            {player?.team === "blue" && "🔵 Blauw"}
+            {!player?.team && "⚪ Geen"}
           </div>
         </div>
 
-        <div className="bg-green-700 rounded-xl p-3">
-          <div className="text-sm">
-            Timer
-          </div>
-
-          <div className="font-bold text-xl">
+        <div className="rounded-xl bg-green-700 p-3">
+          <div className="text-sm">Timer</div>
+          <div className="text-xl font-bold">
             {timeLeft}
           </div>
         </div>
       </div>
 
-      <div className="mt-3 text-center">
-        {status ===
-          "lobby" && (
-          <span>
-            ⏳ Lobby
-          </span>
-        )}
-
-        {status ===
-          "playing" && (
-          <span>
-            ▶️ Actief Spel
-          </span>
-        )}
-
-        {status ===
-          "finished" && (
-          <span>
-            🏁 Spel Beëindigd
-          </span>
-        )}
+      <div className="mt-4 text-center font-bold">
+        {game.status === "waiting" && "⏳ Lobby"}
+        {game.status === "running" && "▶️ Actief"}
+        {game.status === "paused" && "⏸️ Gepauzeerd"}
+        {game.status === "finished" && "🏁 Beëindigd"}
       </div>
     </div>
   );

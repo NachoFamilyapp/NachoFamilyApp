@@ -1,129 +1,189 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-export default function Home() {
+import BigButton from "@/components/ui/BigButton";
+import Card from "@/components/ui/Card";
+
+export default function HomePage() {
+
+  const router = useRouter();
+
   return (
-    <main className="min-h-screen bg-green-900 text-white">
-      <nav className="bg-green-950 border-b border-green-700 p-4 flex flex-wrap gap-2 justify-center">
-        <Link
-          href="/"
-          className="bg-green-700 px-4 py-2 rounded-xl font-bold"
-        >
-          🏠 Home
-        </Link>
 
-        <Link
-          href="/lobby"
-          className="bg-blue-700 px-4 py-2 rounded-xl font-bold"
-        >
-          👥 Lobby
-        </Link>
+    <main
+      className="
+      min-h-screen
 
-        <Link
-          href="/game"
-          className="bg-purple-700 px-4 py-2 rounded-xl font-bold"
-        >
-          🗺️ Game
-        </Link>
+      flex
 
-        <Link
-          href="/admin"
-          className="bg-yellow-600 text-black px-4 py-2 rounded-xl font-bold"
-        >
-          ⚙️ Beheer
-        </Link>
-      </nav>
+      flex-col
 
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="bg-green-800 rounded-3xl p-8 text-center shadow-xl">
-          <div className="text-7xl mb-4">
-            🚩
-          </div>
+      items-center
 
-          <h1 className="text-5xl font-bold mb-4">
-            NachoFamilyApp
-          </h1>
+      justify-between
 
-          <p className="text-xl text-green-100 mb-8">
-            Capture The Flag • GPS Games • Familie Avonturen
-          </p>
+      p-6
 
-          <div className="grid gap-4 max-w-md mx-auto">
-            <Link
-              href="/create-game"
-              className="bg-blue-600 hover:bg-blue-500 p-5 rounded-2xl text-xl font-bold text-center"
-            >
-              ➕ Nieuw Spel
-            </Link>
+      relative
 
-            <Link
-              href="/join-game"
-              className="bg-red-600 hover:bg-red-500 p-5 rounded-2xl text-xl font-bold text-center"
-            >
-              🎮 Spel Joinen
-            </Link>
+      overflow-hidden
+    "
+    >
 
-            <Link
-              href="/lobby"
-              className="bg-green-600 hover:bg-green-500 p-5 rounded-2xl text-xl font-bold text-center"
-            >
-              👥 Naar Lobby
-            </Link>
+      {/* Wolken */}
 
-            <Link
-              href="/admin"
-              className="bg-yellow-500 hover:bg-yellow-400 text-black p-5 rounded-2xl text-xl font-bold text-center"
-            >
-              ⚙️ Beheer
-            </Link>
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-4 mt-8">
-          <div className="bg-green-800 rounded-2xl p-4 text-center">
-            <div className="text-3xl mb-2">
-              👥
-            </div>
-
-            <div className="font-bold">
-              Teams
-            </div>
-
-            <div className="text-sm text-green-100">
-              Speel samen of tegen elkaar
-            </div>
-          </div>
-
-          <div className="bg-green-800 rounded-2xl p-4 text-center">
-            <div className="text-3xl mb-2">
-              🚩
-            </div>
-
-            <div className="font-bold">
-              Verover de Vlag
-            </div>
-
-            <div className="text-sm text-green-100">
-              Vind de vlag van de tegenstander
-            </div>
-          </div>
-
-          <div className="bg-green-800 rounded-2xl p-4 text-center">
-            <div className="text-3xl mb-2">
-              📍
-            </div>
-
-            <div className="font-bold">
-              Live GPS
-            </div>
-
-            <div className="text-sm text-green-100">
-              Volg spelers realtime
-            </div>
-          </div>
-        </div>
+      <div className="absolute top-6 left-8 text-6xl opacity-70">
+        ☁️
       </div>
+
+      <div className="absolute top-20 right-8 text-5xl opacity-60">
+        ☁️
+      </div>
+
+      <div className="absolute top-40 left-20 text-4xl opacity-50">
+        ☁️
+      </div>
+
+      {/* Titel */}
+
+      <div className="flex flex-col items-center mt-10">
+
+        <div className="text-8xl">
+
+          🦁
+
+        </div>
+
+        <h1
+          className="
+          text-5xl
+          font-black
+          mt-4
+          drop-shadow-lg
+        "
+        >
+          NachoFamilyApp
+        </h1>
+
+        <p
+          className="
+          mt-3
+          text-xl
+          opacity-90
+        "
+        >
+          Het avontuur begint hier
+        </p>
+
+      </div>
+
+      {/* Menu */}
+
+      <Card className="w-full max-w-md">
+
+        <div className="space-y-5">
+
+          <BigButton
+            icon="🟢"
+            color="green"
+            onClick={() =>
+              router.push("/create-game")
+            }
+          >
+            Maak Game
+          </BigButton>
+
+          <BigButton
+            icon="🔵"
+            color="blue"
+            onClick={() =>
+              router.push("/join-game")
+            }
+          >
+            Join Game
+          </BigButton>
+
+          <BigButton
+            icon="⚙️"
+            color="yellow"
+            onClick={() =>
+              router.push("/admin")
+            }
+          >
+            Instellingen
+          </BigButton>
+
+          <BigButton
+            icon="🧭"
+            color="purple"
+            onClick={() =>
+              router.push("/speurtocht")
+            }
+          >
+            Speurtocht
+          </BigButton>
+
+          <BigButton
+            icon="📖"
+            color="purple"
+            onClick={() =>
+              router.push("/about")
+            }
+          >
+            Handleiding
+          </BigButton>
+
+        </div>
+
+      </Card>
+
+      {/* Footer */}
+
+      <div
+        className="
+        text-center
+        opacity-80
+        mb-4
+      "
+      >
+
+        <div className="text-lg font-bold">
+
+          Version 2.0 Alpha
+
+        </div>
+
+        <div>
+
+          🦁 Powered by Nacho
+
+        </div>
+
+      </div>
+
+      {/* Gras */}
+
+      <div
+        className="
+        absolute
+
+        bottom-0
+
+        left-0
+
+        w-full
+
+        h-20
+
+        bg-green-700
+
+        rounded-t-[60px]
+      "
+      />
+
     </main>
+
   );
+
 }

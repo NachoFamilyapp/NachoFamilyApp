@@ -15,7 +15,6 @@ import GameInfoBar from "@/components/GameInfoBar";
 interface WinnerData {
   team?: string;
   playerName?: string;
-  flagTeam?: string;
 }
 
 export default function ResultsPage() {
@@ -49,14 +48,8 @@ export default function ResultsPage() {
           const data = snapshot.data();
 
           setWinner({
-            team:
-              data.winner ||
-              data.winnerTeam,
-            playerName:
-              data.winnerPlayer ||
-              data.flagCarrier?.playerName,
-            flagTeam:
-              data.flagCarrier?.flagTeam,
+            team: data.winner ?? undefined,
+            playerName: data.winnerPlayer ?? undefined,
           });
         }
       );

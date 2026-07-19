@@ -1,120 +1,175 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import {
-  doc,
-  onSnapshot,
-  updateDoc,
-  getDoc,
-} from "firebase/firestore";
-
-import { db } from "@/lib/firebase";
 import GameInfoBar from "@/components/GameInfoBar";
 
-interface Player {
-  name: string;
-  host: boolean;
-  team?: string;
-}
+import GameService from "@/lib/gameService";
+
+import {
+  Game,
+  Player,
+} from "@/types/game";
 
 export default function LobbyPage() {
+
   const router = useRouter();
 
-  const [gameCode, setGameCode] = useState("");
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [isHost, setIsHost] = useState(false);
+  const [game, setGame] =
+    useState<Game | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const gameCode =
+    GameService.getStoredGameCode();
+
+  const playerId =
+    GameService.getStoredPlayerId();
 
   useEffect(() => {
-    const storedCode = localStorage.getItem("gameCode") || "";
-    const storedPlayer = localStorage.getItem("playerName") || "";
 
-    setGameCode(storedCode);
+    if (!gameCode) {
 
-    if (!storedCode) {
+      router.replace("/");
+
       return;
+
     }
 
-    const gameRef = doc(db, "games", storedCode);
+    const unsubscribe =
+      GameService.listenToGame(
 
-    const unsubscribe = onSnapshot(gameRef, (snapshot) => {
-      if (!snapshot.exists()) {
-        return;
-      }
+        gameCode,
 
-      const data = snapshot.data();
-      const gamePlayers: Player[] = data.players || [];
+        (newGame) => {
 
-      setPlayers(gamePlayers);
+          setGame(newGame);
 
-      if (data.status === "playing") {
-        router.push("/game");
-      }
+          setLoading(false);
 
-      const me = gamePlayers.find(
-        (player) => player.name === storedPlayer
+          if (!newGame)
+            return;
+
+          if (
+            newGame.status === "running"
+          ) {
+
+            router.replace("/game");
+
+          }
+
+        }
+
       );
 
-      setIsHost(me?.host || false);
-    });
+    return () => {
 
-    return () => unsubscribe();
-  }, [router]);
+      unsubscribe();
 
-  const startGame = async () => {
-    try {
-      const gameRef = doc(db, "games", gameCode);
-      const gameSnap = await getDoc(gameRef);
+    };
 
-      if (!gameSnap.exists()) {
-        alert("Game niet gevonden");
-        return;
-      }
+  }, [gameCode, router]);
 
-      const data = gameSnap.data();
+  const players =
+    useMemo(() => {
 
-      if (
-        data.gameDuration === undefined
-      ) {
-        router.push("/admin");
-        return;
-      }
+      if (!game)
+        return [];
 
-      if (
-        !data.playArea ||
-        data.playArea.length < 3
-      ) {
-        router.push("/admin");
-        return;
-      }
-
-      const gamePlayers: Player[] = data.players || [];
-
-      const missingTeam = gamePlayers.some(
-        (player) => !player.team
+      return Object.values(
+        game.players
       );
 
-      if (missingTeam) {
-        router.push("/team-select");
-        return;
-      }
+    }, [game]);
 
-      await updateDoc(gameRef, {
-        status: "playing",
-        startTime: Date.now(),
-      });
-    } catch (error) {
-      console.error(error);
-      alert("Starten mislukt");
+  const me =
+    useMemo(() => {
+
+      if (!game)
+        return null;
+
+      return (
+        game.players[playerId] ??
+        null
+      );
+
+    }, [game, playerId]);
+
+  const isHost =
+    me?.host ?? false;
+
+  const canStart =
+    GameService.canStartGame(
+      game
+    );
+
+  async function startGame() {
+
+    if (!game)
+      return;
+
+    if (!canStart) {
+
+      alert(
+        "Controleer teams en speelgebied."
+      );
+
+      return;
+
     }
-  };
 
-  return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-green-900 text-white">
-      <nav className="w-full border-b border-green-700 bg-green-950">
-        <div className="mx-auto flex w-full max-w-2xl flex-wrap justify-center gap-2 px-3 py-4">
+    await GameService.startGame(
+      game.gameCode
+    );
+
+  }
+
+  if (loading) {
+
+    return (
+
+      <main className="flex min-h-screen items-center justify-center bg-green-900 text-white">
+
+        <div className="text-3xl font-bold">
+
+          Lobby laden...
+
+        </div>
+
+      </main>
+
+    );
+
+  }
+
+  if (!game) {
+
+    return (
+
+      <main className="flex min-h-screen items-center justify-center bg-red-900 text-white">
+
+        <div className="text-3xl font-bold">
+
+          Game niet gevonden
+
+        </div>
+
+      </main>
+
+    );
+
+  }
+    return (
+
+    <main className="min-h-screen bg-green-900 text-white">
+
+      <nav className="border-b border-green-700 bg-green-950">
+
+        <div className="mx-auto flex max-w-3xl flex-wrap justify-center gap-2 p-4">
+
           <Link
             href="/"
             className="rounded-xl bg-green-700 px-4 py-2 font-bold"
@@ -140,68 +195,124 @@ export default function LobbyPage() {
             href="/admin"
             className="rounded-xl bg-yellow-600 px-4 py-2 font-bold text-black"
           >
-            ⚙️ Beheer
+            ⚙️ Admin
           </Link>
+
         </div>
+
       </nav>
 
-      <div className="mx-auto w-full max-w-2xl px-3 py-6 sm:px-6 sm:py-8">
-        <div className="w-full min-w-0 overflow-hidden">
-          <GameInfoBar />
-        </div>
+      <div className="mx-auto max-w-3xl p-5">
 
-        <div className="mt-4 w-full min-w-0 rounded-3xl bg-green-800 p-6 text-center sm:p-8">
-          <div className="mb-4 text-5xl sm:text-6xl">
+        <GameInfoBar />
+
+        <div className="mt-5 rounded-3xl bg-green-800 p-6 text-center">
+
+          <div className="mb-4 text-6xl">
+
             🎮
+
           </div>
 
-          <h1 className="mb-4 text-3xl font-bold sm:text-4xl">
+          <h1 className="text-4xl font-bold">
+
             Lobby
+
           </h1>
 
-          <div className="mb-2 text-green-100">
+          <p className="mt-5 text-green-200">
+
             Game Code
+
+          </p>
+
+          <div className="mt-2 text-6xl font-black tracking-[10px]">
+
+            {game.gameCode}
+
           </div>
 
-          <div className="break-all text-5xl font-bold tracking-wider sm:text-6xl sm:tracking-widest">
-            {gameCode}
+          <div className="mt-6 text-lg">
+
+            Status:
+
+            <span className="ml-2 font-bold">
+
+              {game.status}
+
+            </span>
+
           </div>
+
         </div>
 
-        <div className="mt-6 w-full min-w-0 rounded-3xl bg-white p-5 text-black sm:p-6">
-          <h2 className="mb-4 text-2xl font-bold">
-            👥 Spelers ({players.length})
-          </h2>
+        <div className="mt-6 rounded-3xl bg-white p-6 text-black">
 
-          {players.length === 0 ? (
+          <div className="mb-5 flex items-center justify-between">
+
+            <h2 className="text-2xl font-bold">
+
+              👥 Spelers ({players.length})
+
+            </h2>
+
             <div>
-              Geen spelers gevonden
-            </div>
-          ) : (
-            players.map((player, index) => (
-              <div
-                key={`${player.name}-${index}`}
-                className="flex min-w-0 items-center justify-between gap-3 border-b py-3"
-              >
-                <div className="min-w-0 break-words">
-                  {player.host && "👑 "}
-                  {player.name}
-                </div>
 
-                <div className="shrink-0">
-                  {player.team === "red" && "🔴"}
-                  {player.team === "blue" && "🔵"}
-                  {!player.team && "⚪"}
-                </div>
+              Jij:
+
+              <strong className="ml-2">
+
+                {me?.name}
+
+              </strong>
+
+            </div>
+
+          </div>
+
+          {players.map((player) => (
+
+            <div
+              key={player.id}
+              className="flex items-center justify-between border-b py-3"
+            >
+
+              <div>
+
+                {player.host && "👑 "}
+
+                {player.name}
+
               </div>
-            ))
-          )}
+
+              <div className="flex gap-3">
+
+                <span>
+
+                  {player.team === "red" && "🔴"}
+
+                  {player.team === "blue" && "🔵"}
+
+                </span>
+
+                <span>
+
+                  {player.online ? "🟢" : "⚫"}
+
+                </span>
+
+              </div>
+
+            </div>
+
+          ))}
+
         </div>
 
-        <div className="mt-6 grid w-full gap-4">
-          <Link
+        <div className="mt-6 grid gap-4">
+                    <Link
             href="/team-select"
-            className="w-full rounded-2xl bg-blue-600 p-5 text-center text-xl font-bold"
+            className="w-full rounded-2xl bg-blue-600 p-5 text-center text-xl font-bold transition hover:bg-blue-500"
           >
             👥 Kies Team
           </Link>
@@ -210,17 +321,45 @@ export default function LobbyPage() {
             <button
               type="button"
               onClick={startGame}
-              className="w-full rounded-2xl bg-green-600 p-5 text-xl font-bold"
+              disabled={!canStart}
+              className={`w-full rounded-2xl p-5 text-xl font-bold transition ${
+                canStart
+                  ? "bg-green-600 hover:bg-green-500"
+                  : "cursor-not-allowed bg-gray-500"
+              }`}
             >
               ▶️ Start Spel
             </button>
           ) : (
-            <div className="w-full rounded-2xl bg-yellow-600 p-5 text-center text-xl font-bold">
+            <div className="w-full rounded-2xl bg-yellow-600 p-5 text-center text-xl font-bold text-black">
               ⏳ Wachten op host...
             </div>
           )}
+
+          {!canStart && isHost && (
+            <div className="rounded-2xl border border-yellow-500 bg-yellow-100 p-4 text-center text-black">
+              <div className="font-bold">
+                Het spel kan nog niet gestart worden.
+              </div>
+
+              <div className="mt-2 text-sm">
+                Controleer of:
+              </div>
+
+              <ul className="mt-2 list-inside list-disc text-left">
+                <li>Er minimaal 2 spelers zijn.</li>
+                <li>Beide teams minimaal 1 speler hebben.</li>
+                <li>Het speelgebied is ingesteld.</li>
+              </ul>
+            </div>
+          )}
+
         </div>
+
       </div>
+
     </main>
+
   );
+
 }

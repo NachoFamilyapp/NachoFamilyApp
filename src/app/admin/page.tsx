@@ -53,8 +53,8 @@ export default function AdminPage() {
         await updateDoc(
           gameRef,
           {
-            gameDuration:
-              duration,
+            "settings.gameDuration":
+              duration ?? 86400,
             gpsTestMode:
               gpsTestMode,
           }

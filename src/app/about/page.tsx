@@ -1,0 +1,67 @@
+"use client";
+
+import Link from "next/link";
+import Card from "@/components/ui/Card";
+
+export default function AboutPage() {
+  return (
+    <main className="min-h-screen bg-green-900 text-white p-6">
+      <div className="mx-auto max-w-2xl">
+        <div className="text-center mb-8">
+          <div className="text-6xl mb-3">📖</div>
+          <h1 className="text-4xl font-bold">Handleiding</h1>
+        </div>
+
+        <Card className="text-white space-y-5">
+          <div>
+            <h2 className="text-2xl font-bold mb-2">🚩 Verover de Vlag</h2>
+            <p className="opacity-90">
+              Twee teams (rood en blauw) proberen elkaars vlag te veroveren en
+              veilig naar hun eigen basis te brengen. Een team wint zodra het
+              genoeg vlaggen heeft binnengebracht, of als de tijd om is (dan
+              wint het team met de meeste punten).
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold mb-2">📱 Zo speel je</h2>
+            <ol className="list-decimal list-inside space-y-1 opacity-90">
+              <li>Eén speler maakt een spel aan en wordt host.</li>
+              <li>Andere spelers joinen met de 4-cijferige code.</li>
+              <li>Kies een team in de lobby.</li>
+              <li>De host stelt bij Instellingen het speelgebied en de vlaggen in.</li>
+              <li>Sta dicht bij de vlag van de tegenstander om hem op te pakken.</li>
+              <li>Breng de vlag terug naar je eigen basis om te scoren.</li>
+              <li>Tik de drager van jouw vlag om hem terug te sturen.</li>
+            </ol>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold mb-2">🔒 Veilig voor kinderen</h2>
+            <p className="opacity-90">
+              Er is geen chatfunctie en locaties worden alleen binnen het
+              spel gebruikt om afstand te bepalen — niet gedeeld buiten de
+              groep.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold mb-2">🧭 Speurtocht</h2>
+            <p className="opacity-90">
+              Los van Verover de Vlag kun je ook een Speurtocht maken: een
+              route van punten die je met het kompas van je telefoon moet
+              vinden.
+            </p>
+          </div>
+        </Card>
+
+        <Link
+          href="/"
+          className="block text-center mt-6 underline opacity-90"
+        >
+          🏠 Terug naar Home
+        </Link>
+      </div>
+    </main>
+  );
+}

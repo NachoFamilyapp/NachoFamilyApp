@@ -6,7 +6,10 @@ import {
   Marker,
   Polygon,
   Popup,
+  useMap,
 } from "react-leaflet";
+
+import PlayerMarker from "@/components/PlayerMarker";
 
 import {
   doc,
@@ -22,7 +25,6 @@ import {
   useRef,
   useState,
 } from "react";
-
 interface FirebasePoint {
   lat: number;
   lng: number;
@@ -82,7 +84,19 @@ function calculateDistance(
 
   return earthRadius * c;
 }
+function FollowPlayer({
+  position,
+}: {
+  position: [number, number];
+}) {
+  const map = useMap();
 
+  useEffect(() => {
+    map.setView(position);
+  }, [position, map]);
+
+  return null;
+}
 export default function GameField() {
   const [
     playerPosition,
@@ -134,6 +148,11 @@ export default function GameField() {
 
   const actionBusy =
     useRef(false);
+const winSound =
+  useRef<HTMLAudioElement | null>(null);
+
+const flagSound =
+  useRef<HTMLAudioElement | null>(null);
 
   const positionRef =
     useRef<[number, number]>([
@@ -985,6 +1004,22 @@ export default function GameField() {
           }
         );
     }
+useEffect(() => {
+  winSound.current = new Audio("/sounds/win.mp3");
+  flagSound.current = new Audio("/sounds/flag.mp3");
+}, []);
+
+useEffect(() => {
+  if (winner) {
+    winSound.current?.play();
+  }
+}, [winner]);
+
+useEffect(() => {
+  if (flagCarrier) {
+    flagSound.current?.play();
+  }
+}, [flagCarrier]);
 
     return () => {
       unsubscribe();
