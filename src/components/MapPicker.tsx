@@ -42,6 +42,8 @@ export default function MapPicker() {
   const [redFlag, setRedFlag] = useState<[number, number] | null>(null);
   const [blueFlag, setBlueFlag] = useState<[number, number] | null>(null);
 
+  const [locating, setLocating] = useState(false);
+
   const gameCode = GameService.getStoredGameCode();
 
   useEffect(() => {
@@ -80,6 +82,41 @@ export default function MapPicker() {
     if (mode === "blueFlag") {
       setBlueFlag([lat, lng]);
     }
+  };
+
+  const fetchCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Deze telefoon ondersteunt geen GPS-locatie.");
+      return;
+    }
+
+    setLocating(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        if (mode === "area") {
+          setPoints((prev) => [...prev, [lat, lng]]);
+        }
+
+        if (mode === "redFlag") {
+          setRedFlag([lat, lng]);
+        }
+
+        if (mode === "blueFlag") {
+          setBlueFlag([lat, lng]);
+        }
+
+        setLocating(false);
+      },
+      () => {
+        alert("Kon je locatie niet ophalen. Sta locatietoegang toe.");
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
   };
 
   const saveArea = async () => {
@@ -160,7 +197,14 @@ export default function MapPicker() {
         <div>Speelgebied: {points.length >= 3 ? "✅" : "❌"}</div>
         <div>Rode Vlag: {redFlag ? "✅" : "❌"}</div>
         <div>Blauwe Vlag: {blueFlag ? "✅" : "❌"}</div>
-        <div>Modus: {mode}</div>
+        <div>
+          Modus:{" "}
+          {mode === "area"
+            ? "Speelgebied"
+            : mode === "redFlag"
+              ? "Rode vlag"
+              : "Blauwe vlag"}
+        </div>
       </div>
 
       <div className="flex flex-col gap-2 mb-4">
@@ -183,6 +227,20 @@ export default function MapPicker() {
           className={`p-3 rounded-xl ${mode === "blueFlag" ? "bg-blue-500 ring-2 ring-white" : "bg-blue-900"}`}
         >
           🚩 Blauwe Vlag plaatsen
+        </button>
+
+        <button
+          onClick={fetchCurrentLocation}
+          disabled={locating}
+          className="p-3 rounded-xl bg-green-700 disabled:bg-gray-500 font-bold"
+        >
+          {locating
+            ? "📡 Locatie ophalen..."
+            : mode === "area"
+              ? "📍 Voeg huidige locatie toe als punt"
+              : mode === "redFlag"
+                ? "📍 Gebruik huidige locatie voor rode vlag"
+                : "📍 Gebruik huidige locatie voor blauwe vlag"}
         </button>
       </div>
 

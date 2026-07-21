@@ -292,18 +292,22 @@ export class GameService {
   }
 
   static getStoredGameCode() {
+    if (typeof window === "undefined") return "";
     return localStorage.getItem("gameCode") || "";
   }
 
   static getStoredPlayerId() {
+    if (typeof window === "undefined") return "";
     return localStorage.getItem("playerId") || "";
   }
 
   static getStoredPlayerName() {
+    if (typeof window === "undefined") return "";
     return localStorage.getItem("playerName") || "";
   }
 
   static clearStorage() {
+    if (typeof window === "undefined") return;
     localStorage.removeItem("gameCode");
     localStorage.removeItem("playerId");
     localStorage.removeItem("playerName");

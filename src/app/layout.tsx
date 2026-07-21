@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 import GameProvider from "@/components/GameProvider";
@@ -13,8 +13,13 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "NachoFamilyApp",
   },
-  viewport:
-    "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
