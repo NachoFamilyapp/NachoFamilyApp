@@ -17,11 +17,11 @@ import {
   KompasSpeurtocht,
   FotoUitdaging,
   FotoInzending,
-  FotospelSettings,
+  OnderdelenSettings,
 } from "@/types/speurtocht";
 
 const KOMPAS_DOC = doc(db, "speurtocht", "kompas");
-const FOTOSPEL_SETTINGS_DOC = doc(db, "speurtocht", "fotospel");
+const ONDERDELEN_DOC = doc(db, "speurtocht", "onderdelen");
 const UITDAGINGEN_COL = collection(db, "speurtocht_uitdagingen");
 const INZENDINGEN_COL = collection(db, "speurtocht_inzendingen");
 
@@ -45,20 +45,29 @@ export class SpeurtochtService {
     await setDoc(KOMPAS_DOC, hunt);
   }
 
-  // ---------- Fotospel instellingen ----------
+  // ---------- Onderdelen zichtbaarheid ----------
 
-  static async getFotospelSettings(): Promise<FotospelSettings> {
-    const snapshot = await getDoc(FOTOSPEL_SETTINGS_DOC);
+  static async getOnderdelenSettings(): Promise<OnderdelenSettings> {
+    const snapshot = await getDoc(ONDERDELEN_DOC);
 
     if (!snapshot.exists()) {
-      return { active: false };
+      return { kompas: true, foto: false };
     }
 
-    return snapshot.data() as FotospelSettings;
+    const data = snapshot.data();
+
+    return {
+      kompas: data.kompas ?? true,
+      foto: data.foto ?? false,
+    };
   }
 
-  static async setFotospelActive(active: boolean) {
-    await setDoc(FOTOSPEL_SETTINGS_DOC, { active });
+  static async setOnderdeelActive(
+    onderdeel: keyof OnderdelenSettings,
+    active: boolean
+  ) {
+    const current = await this.getOnderdelenSettings();
+    await setDoc(ONDERDELEN_DOC, { ...current, [onderdeel]: active });
   }
 
   // ---------- Foto-uitdagingen (beheerder) ----------

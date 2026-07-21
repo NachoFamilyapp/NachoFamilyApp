@@ -4,58 +4,53 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import Card from "@/components/ui/Card";
-import BigButton from "@/components/ui/BigButton";
+import TeamPicker, {
+  getStoredSpeurtochtTeam,
+  SpeurtochtTeam,
+} from "@/components/speurtocht/TeamPicker";
 
 import { SpeurtochtService } from "@/lib/speurtochtService";
 import { compressImageFile } from "@/lib/imageUtils";
 import { FotoUitdaging, FotoInzending } from "@/types/speurtocht";
 
-const NAME_KEY = "speurtocht_playerName";
-
-export default function FotospelPage() {
+export default function WaarBenIkPage() {
   const router = useRouter();
 
   const [active, setActive] = useState<boolean | null>(null);
   const [uitdagingen, setUitdagingen] = useState<FotoUitdaging[]>([]);
   const [mineSubmissions, setMineSubmissions] = useState<FotoInzending[]>([]);
-  const [playerName, setPlayerName] = useState(() => {
-    if (typeof window === "undefined") return "";
-    return localStorage.getItem(NAME_KEY) || "";
-  });
-  const [nameInput, setNameInput] = useState("");
+  const [team, setTeam] = useState(() => getStoredSpeurtochtTeam());
   const [score, setScore] = useState(0);
 
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  async function refresh(name: string) {
+  async function refresh(teamName: string) {
     const [settings, list, all] = await Promise.all([
-      SpeurtochtService.getFotospelSettings(),
+      SpeurtochtService.getOnderdelenSettings(),
       SpeurtochtService.getUitdagingen(),
       SpeurtochtService.getInzendingen(),
     ]);
 
-    setActive(settings.active);
+    setActive(settings.foto);
     setUitdagingen(list);
-    setMineSubmissions(all.filter((s) => s.playerName === name));
+    setMineSubmissions(all.filter((s) => s.playerName === teamName));
 
-    const playerScore = await SpeurtochtService.getPlayerScore(name);
-    setScore(playerScore);
+    const teamScore = await SpeurtochtService.getPlayerScore(teamName);
+    setScore(teamScore);
   }
 
   useEffect(() => {
-    if (playerName) {
+    if (team) {
       // refresh() is async; state-updates gebeuren na een await.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      refresh(playerName);
+      refresh(team);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function confirmName() {
-    if (!nameInput.trim()) return;
-    localStorage.setItem(NAME_KEY, nameInput.trim());
-    setPlayerName(nameInput.trim());
-    refresh(nameInput.trim());
+  function chooseTeam(chosen: SpeurtochtTeam) {
+    setTeam(chosen);
+    refresh(chosen);
   }
 
   async function submitPhoto(challengeId: string, file: File) {
@@ -65,11 +60,11 @@ export default function FotospelPage() {
 
       await SpeurtochtService.submitInzending({
         challengeId,
-        playerName,
+        playerName: team,
         photoImage: compressed,
       });
 
-      await refresh(playerName);
+      await refresh(team);
       alert("📸 Foto ingestuurd! De beheerder beoordeelt 'm zo.");
     } catch (error) {
       console.error(error);
@@ -79,36 +74,16 @@ export default function FotospelPage() {
     }
   }
 
-  if (!playerName) {
-    return (
-      <main className="min-h-screen flex flex-col items-center justify-center p-6 text-white">
-        <Card className="w-full max-w-sm text-white text-center">
-          <div className="text-5xl mb-4">📸</div>
-          <h1 className="text-2xl font-bold mb-4">Fotospel</h1>
-
-          <label className="block font-bold mb-2">Hoe heet je?</label>
-          <input
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && confirmName()}
-            placeholder="Jouw naam"
-            className="w-full rounded-xl p-4 text-black bg-white mb-4 text-center text-xl"
-          />
-
-          <BigButton icon="✅" color="yellow" onClick={confirmName}>
-            Verder
-          </BigButton>
-        </Card>
-      </main>
-    );
+  if (!team) {
+    return <TeamPicker title="Waar ben ik? 📸" onSelect={chooseTeam} />;
   }
 
   if (active === false) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-white p-6 text-center gap-4">
         <div className="text-5xl">🚧</div>
-        <p className="text-xl font-bold">Het fotospel is nog niet gestart.</p>
-        <p className="opacity-80">Vraag de beheerder om het spel te openen.</p>
+        <p className="text-xl font-bold">Dit onderdeel is nog niet gestart.</p>
+        <p className="opacity-80">Vraag de beheerder om het te openen.</p>
         <button onClick={() => router.push("/speurtocht")} className="underline opacity-80">
           ← Terug
         </button>
@@ -120,8 +95,10 @@ export default function FotospelPage() {
     <main className="min-h-screen flex flex-col items-center p-6 text-white gap-4">
       <div className="text-center">
         <div className="text-5xl mb-2">📸</div>
-        <h1 className="text-2xl font-bold">Fotospel</h1>
-        <p className="opacity-80">Jouw score: 🏆 {score} punten</p>
+        <h1 className="text-2xl font-bold">Waar ben ik?</h1>
+        <p className="opacity-80">
+          {team} · score: 🏆 {score} punten
+        </p>
       </div>
 
       {uitdagingen.length === 0 && (

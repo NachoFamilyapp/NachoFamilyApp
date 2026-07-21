@@ -41,6 +41,7 @@ export interface FotoInzending {
   submittedAt: number;
 }
 
-export interface FotospelSettings {
-  active: boolean;
+export interface OnderdelenSettings {
+  kompas: boolean;
+  foto: boolean;
 }

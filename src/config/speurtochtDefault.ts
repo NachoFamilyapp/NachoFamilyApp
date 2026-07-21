@@ -69,13 +69,13 @@ export const DEFAULT_KOMPAS_SPEURTOCHT: KompasSpeurtocht = {
     },
     {
       id: "cp5",
-      emoji: "🚝",
+      emoji: "🗼",
       question:
         "Welke attractie rijdt rustig boven het park en geeft je uitzicht over Slagharen?",
-      options: ["Jumbo", "Monorail", "Mine Train"],
+      options: ["Jumbo", "Sky Tower", "Mine Train"],
       correctIndex: 1,
       letter: "S",
-      targetName: "Monorail",
+      targetName: "Sky Tower",
       lat: null,
       lng: null,
       radius: 25,

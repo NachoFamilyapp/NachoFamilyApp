@@ -16,6 +16,7 @@ import {
   SpeurtochtCheckpoint,
   FotoUitdaging,
   FotoInzending,
+  OnderdelenSettings,
 } from "@/types/speurtocht";
 
 const KompasMapPicker = dynamic(
@@ -26,7 +27,7 @@ const KompasMapPicker = dynamic(
 const ADMIN_CODE = "5712";
 const SESSION_KEY = "speurtocht_admin_ok";
 
-type Tab = "kompas" | "fotospel" | "inzendingen";
+type Tab = "onderdelen" | "kompas" | "fotospel" | "inzendingen";
 
 export default function SpeurtochtBeheerPage() {
   const router = useRouter();
@@ -93,7 +94,7 @@ export default function SpeurtochtBeheerPage() {
 
 function BeheerPanel() {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("kompas");
+  const [tab, setTab] = useState<Tab>("onderdelen");
 
   return (
     <main className="min-h-screen text-white">
@@ -106,17 +107,24 @@ function BeheerPanel() {
         </button>
 
         <button
+          onClick={() => setTab("onderdelen")}
+          className={`px-4 py-2 rounded-xl font-bold ${tab === "onderdelen" ? "bg-green-600" : "bg-green-900"}`}
+        >
+          👁️ Onderdelen
+        </button>
+
+        <button
           onClick={() => setTab("kompas")}
           className={`px-4 py-2 rounded-xl font-bold ${tab === "kompas" ? "bg-blue-600" : "bg-blue-900"}`}
         >
-          🧭 Kompas Speurtocht
+          🧭 Onderdeel 1: Speurtocht
         </button>
 
         <button
           onClick={() => setTab("fotospel")}
           className={`px-4 py-2 rounded-xl font-bold ${tab === "fotospel" ? "bg-yellow-600" : "bg-yellow-900"}`}
         >
-          📸 Fotospel
+          📸 Onderdeel 2: Waar ben ik?
         </button>
 
         <button
@@ -128,11 +136,69 @@ function BeheerPanel() {
       </nav>
 
       <div className="max-w-3xl mx-auto px-4 py-6">
+        {tab === "onderdelen" && <OnderdelenTab />}
         {tab === "kompas" && <KompasTab />}
         {tab === "fotospel" && <FotospelTab />}
         {tab === "inzendingen" && <InzendingenTab />}
       </div>
     </main>
+  );
+}
+
+function OnderdelenTab() {
+  const [settings, setSettings] = useState<OnderdelenSettings | null>(null);
+
+  useEffect(() => {
+    // getOnderdelenSettings() is async; state-update gebeurt na een await.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    SpeurtochtService.getOnderdelenSettings().then(setSettings);
+  }, []);
+
+  async function toggle(key: keyof OnderdelenSettings) {
+    if (!settings) return;
+    const next = { ...settings, [key]: !settings[key] };
+    setSettings(next);
+    await SpeurtochtService.setOnderdeelActive(key, next[key]);
+  }
+
+  if (!settings) {
+    return <p className="text-center opacity-80 py-10">Laden...</p>;
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Card className="text-white">
+        <h2 className="text-xl font-bold mb-2">👁️ Wat zien spelers nu?</h2>
+        <p className="opacity-80 text-sm mb-4">
+          Zet hier per onderdeel aan of uit wat spelers op dit moment op de
+          Speurtocht-startpagina zien. Zo kun je het park in fases spelen.
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={() => toggle("kompas")}
+            className={`w-full p-4 rounded-xl text-lg font-bold text-left ${
+              settings.kompas ? "bg-green-600" : "bg-red-700"
+            }`}
+          >
+            {settings.kompas ? "✅" : "❌"} Onderdeel 1: 🧭 Speurtocht
+          </button>
+
+          <button
+            onClick={() => toggle("foto")}
+            className={`w-full p-4 rounded-xl text-lg font-bold text-left ${
+              settings.foto ? "bg-green-600" : "bg-red-700"
+            }`}
+          >
+            {settings.foto ? "✅" : "❌"} Onderdeel 2: 📸 Waar ben ik?
+          </button>
+        </div>
+
+        <p className="text-sm opacity-70 mt-4">
+          Nieuwe onderdelen komen hier later gewoon bij.
+        </p>
+      </Card>
+    </div>
   );
 }
 
@@ -389,7 +455,6 @@ function KompasTab() {
 
 function FotospelTab() {
   const [uitdagingen, setUitdagingen] = useState<FotoUitdaging[]>([]);
-  const [active, setActive] = useState(false);
   const [title, setTitle] = useState("");
   const [hint, setHint] = useState("");
   const [points, setPoints] = useState(1);
@@ -397,12 +462,8 @@ function FotospelTab() {
   const [uploading, setUploading] = useState(false);
 
   async function refresh() {
-    const [list, settings] = await Promise.all([
-      SpeurtochtService.getUitdagingen(),
-      SpeurtochtService.getFotospelSettings(),
-    ]);
+    const list = await SpeurtochtService.getUitdagingen();
     setUitdagingen(list);
-    setActive(settings.active);
   }
 
   useEffect(() => {
@@ -410,12 +471,6 @@ function FotospelTab() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh();
   }, []);
-
-  async function toggleActive() {
-    const next = !active;
-    setActive(next);
-    await SpeurtochtService.setFotospelActive(next);
-  }
 
   async function handleFile(file: File) {
     const compressed = await compressImageFile(file, 900, 0.6);
@@ -459,22 +514,13 @@ function FotospelTab() {
   return (
     <div className="flex flex-col gap-4">
       <Card className="text-white">
-        <h2 className="text-xl font-bold mb-2">📸 Fotospel</h2>
+        <h2 className="text-xl font-bold mb-2">📸 Waar ben ik?</h2>
         <p className="opacity-80 text-sm mb-4">
           Zet ingezoomde foto&apos;s van plekken in het park. Spelers zoeken
-          de plek en maken zelf een foto die erop lijkt.
+          de plek en maken zelf een foto die erop lijkt. Ga naar het
+          tabblad &quot;👁️ Onderdelen&quot; om dit onderdeel zichtbaar te
+          maken voor spelers.
         </p>
-
-        <button
-          onClick={toggleActive}
-          className={`w-full p-4 rounded-xl text-xl font-bold ${
-            active ? "bg-green-600" : "bg-red-600"
-          }`}
-        >
-          {active
-            ? "✅ Fotospel is zichtbaar voor spelers"
-            : "❌ Fotospel is nog verborgen voor spelers"}
-        </button>
       </Card>
 
       <Card className="text-white">

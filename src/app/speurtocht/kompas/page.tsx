@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import Card from "@/components/ui/Card";
 import BigButton from "@/components/ui/BigButton";
 import Compass from "@/components/Compass";
+import TeamPicker, {
+  getStoredSpeurtochtTeam,
+} from "@/components/speurtocht/TeamPicker";
 
 import { SpeurtochtService } from "@/lib/speurtochtService";
 import { distanceBetween } from "@/lib/gps";
@@ -13,7 +16,6 @@ import { LatLng } from "@/types/game";
 import { KompasSpeurtocht } from "@/types/speurtocht";
 
 const PROGRESS_KEY = "speurtocht_kompas_progress";
-const NAME_KEY = "speurtocht_playerName";
 
 type Progress = {
   checkpointIndex: number;
@@ -43,11 +45,7 @@ export default function KompasSpeurtochtPage() {
   const router = useRouter();
 
   const [hunt, setHunt] = useState<KompasSpeurtocht | null>(null);
-  const [playerName, setPlayerName] = useState(() => {
-    if (typeof window === "undefined") return "";
-    return localStorage.getItem(NAME_KEY) || "";
-  });
-  const [nameInput, setNameInput] = useState("");
+  const [team, setTeam] = useState(() => getStoredSpeurtochtTeam());
 
   const [position, setPosition] = useState<LatLng | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -90,12 +88,6 @@ export default function KompasSpeurtochtPage() {
     return () => navigator.geolocation.clearWatch(watchId);
   }, [started, geoSupported]);
 
-  const confirmName = useCallback(() => {
-    if (!nameInput.trim()) return;
-    localStorage.setItem(NAME_KEY, nameInput.trim());
-    setPlayerName(nameInput.trim());
-  }, [nameInput]);
-
   if (!hunt) {
     return (
       <main className="min-h-screen flex items-center justify-center text-white">
@@ -128,29 +120,9 @@ export default function KompasSpeurtochtPage() {
     );
   }
 
-  // Naam nog niet ingevuld
-  if (!playerName) {
-    return (
-      <main className="min-h-screen flex flex-col items-center justify-center p-6 text-white">
-        <Card className="w-full max-w-sm text-white text-center">
-          <div className="text-5xl mb-4">🧭</div>
-          <h1 className="text-2xl font-bold mb-4">{hunt.title}</h1>
-
-          <label className="block font-bold mb-2">Hoe heet je?</label>
-          <input
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && confirmName()}
-            placeholder="Jouw naam"
-            className="w-full rounded-xl p-4 text-black bg-white mb-4 text-center text-xl"
-          />
-
-          <BigButton icon="✅" color="blue" onClick={confirmName}>
-            Verder
-          </BigButton>
-        </Card>
-      </main>
-    );
+  // Team nog niet gekozen
+  if (!team) {
+    return <TeamPicker title={hunt.title} onSelect={setTeam} />;
   }
 
   // Introscherm
@@ -234,7 +206,8 @@ export default function KompasSpeurtochtPage() {
     <main className="min-h-screen flex flex-col items-center p-6 text-white gap-6">
       <div className="text-center">
         <div className="text-sm opacity-80">
-          Opdracht {progress.checkpointIndex + 1} van {validCheckpoints.length}
+          {team} · Opdracht {progress.checkpointIndex + 1} van{" "}
+          {validCheckpoints.length}
         </div>
         <h1 className="text-2xl font-bold">
           {checkpoint.emoji} Op zoek naar {checkpoint.targetName}

@@ -6,16 +6,25 @@ import { useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import BigButton from "@/components/ui/BigButton";
 import { SpeurtochtService } from "@/lib/speurtochtService";
+import { OnderdelenSettings } from "@/types/speurtocht";
 
 export default function SpeurtochtHomePage() {
   const router = useRouter();
 
-  const [fotospelActive, setFotospelActive] = useState(false);
+  const [onderdelen, setOnderdelen] = useState<OnderdelenSettings | null>(
+    null
+  );
+  const [scores, setScores] = useState<{ rood: number; blauw: number } | null>(
+    null
+  );
 
   useEffect(() => {
-    SpeurtochtService.getFotospelSettings().then((settings) =>
-      setFotospelActive(settings.active)
-    );
+    SpeurtochtService.getOnderdelenSettings().then(setOnderdelen);
+
+    Promise.all([
+      SpeurtochtService.getPlayerScore("Rood team"),
+      SpeurtochtService.getPlayerScore("Blauw team"),
+    ]).then(([rood, blauw]) => setScores({ rood, blauw }));
   }, []);
 
   return (
@@ -29,24 +38,42 @@ export default function SpeurtochtHomePage() {
         </p>
       </div>
 
+      {scores && (scores.rood > 0 || scores.blauw > 0) && (
+        <Card className="w-full max-w-sm text-white text-center">
+          <div className="text-sm opacity-80 mb-2">🏆 Tussenstand</div>
+          <div className="flex justify-center gap-6 text-xl font-bold">
+            <div>🔴 {scores.rood}</div>
+            <div>🔵 {scores.blauw}</div>
+          </div>
+        </Card>
+      )}
+
       <Card className="w-full max-w-sm flex flex-col gap-4 text-white">
 
-        <BigButton
-          icon="🧭"
-          color="blue"
-          onClick={() => router.push("/speurtocht/kompas")}
-        >
-          Start Kompas Speurtocht
-        </BigButton>
+        {onderdelen?.kompas && (
+          <BigButton
+            icon="🧭"
+            color="blue"
+            onClick={() => router.push("/speurtocht/kompas")}
+          >
+            Onderdeel 1: Speurtocht
+          </BigButton>
+        )}
 
-        {fotospelActive && (
+        {onderdelen?.foto && (
           <BigButton
             icon="📸"
             color="yellow"
             onClick={() => router.push("/speurtocht/foto")}
           >
-            Fotospel
+            Onderdeel 2: Waar ben ik?
           </BigButton>
+        )}
+
+        {onderdelen && !onderdelen.kompas && !onderdelen.foto && (
+          <p className="text-center opacity-80">
+            Er is nog geen onderdeel gestart. Vraag de beheerder!
+          </p>
         )}
 
         <BigButton
