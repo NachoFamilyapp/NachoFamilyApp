@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 
 import Card from "@/components/ui/Card";
 import BigButton from "@/components/ui/BigButton";
@@ -16,6 +17,11 @@ import {
   FotoUitdaging,
   FotoInzending,
 } from "@/types/speurtocht";
+
+const KompasMapPicker = dynamic(
+  () => import("@/components/speurtocht/KompasMapPicker"),
+  { ssr: false }
+);
 
 const ADMIN_CODE = "5712";
 const SESSION_KEY = "speurtocht_admin_ok";
@@ -217,6 +223,16 @@ function KompasTab() {
         />
       </Card>
 
+      <Card className="text-white">
+        <h3 className="text-lg font-bold mb-3">🗺️ Locaties op de kaart zetten</h3>
+        <KompasMapPicker
+          checkpoints={hunt.checkpoints}
+          centerLat={hunt.startLat}
+          centerLng={hunt.startLng}
+          onSetLocation={(id, lat, lng) => updateCheckpoint(id, { lat, lng })}
+        />
+      </Card>
+
       {hunt.checkpoints.map((cp, index) => (
         <Card key={cp.id} className="text-white">
           <h3 className="text-xl font-bold mb-3">
@@ -330,9 +346,9 @@ function KompasTab() {
             </button>
 
             <p className="text-xs opacity-70 mt-2">
-              Tip: ga zelf naar {cp.targetName || "de attractie"} toe met je
-              telefoon en tik dan op de knop hierboven — zo staat het punt
-              precies goed.
+              Tip: gebruik hierboven de kaart om vanaf een afstand te
+              plaatsen, of ga zelf naar {cp.targetName || "de attractie"} toe
+              en tik op de knop hierboven voor het exacte punt.
             </p>
           </div>
         </Card>
