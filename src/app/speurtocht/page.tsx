@@ -6,7 +6,19 @@ import { useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import BigButton from "@/components/ui/BigButton";
 import { SpeurtochtService } from "@/lib/speurtochtService";
+import { LijstUitdagingService } from "@/lib/lijstUitdagingService";
 import { OnderdelenSettings } from "@/types/speurtocht";
+
+async function teamTotaal(team: string): Promise<number> {
+  const [foto, herinner, puntofstreep, geheimschrift] = await Promise.all([
+    SpeurtochtService.getTeamScore(team),
+    LijstUitdagingService.getTeamPunten("herinner", team),
+    LijstUitdagingService.getTeamPunten("puntofstreep", team),
+    LijstUitdagingService.getTeamPunten("geheimschrift", team),
+  ]);
+
+  return foto + herinner + puntofstreep + geheimschrift;
+}
 
 export default function SpeurtochtHomePage() {
   const router = useRouter();
@@ -21,11 +33,18 @@ export default function SpeurtochtHomePage() {
   useEffect(() => {
     SpeurtochtService.getOnderdelenSettings().then(setOnderdelen);
 
-    Promise.all([
-      SpeurtochtService.getTeamScore("Rood team"),
-      SpeurtochtService.getTeamScore("Blauw team"),
-    ]).then(([rood, blauw]) => setScores({ rood, blauw }));
+    Promise.all([teamTotaal("Rood team"), teamTotaal("Blauw team")]).then(
+      ([rood, blauw]) => setScores({ rood, blauw })
+    );
   }, []);
+
+  const geenOnderdeelActief =
+    onderdelen &&
+    !onderdelen.kompas &&
+    !onderdelen.foto &&
+    !onderdelen.herinner &&
+    !onderdelen.puntofstreep &&
+    !onderdelen.geheimschrift;
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6 gap-6 text-white">
@@ -56,7 +75,7 @@ export default function SpeurtochtHomePage() {
             color="blue"
             onClick={() => router.push("/speurtocht/kompas")}
           >
-            Onderdeel 1: Speurtocht
+            Speurtocht
           </BigButton>
         )}
 
@@ -66,11 +85,41 @@ export default function SpeurtochtHomePage() {
             color="yellow"
             onClick={() => router.push("/speurtocht/foto")}
           >
-            Onderdeel 2: Waar ben ik?
+            Waar ben ik?
           </BigButton>
         )}
 
-        {onderdelen && !onderdelen.kompas && !onderdelen.foto && (
+        {onderdelen?.herinner && (
+          <BigButton
+            icon="🧠"
+            color="green"
+            onClick={() => router.push("/speurtocht/herinner")}
+          >
+            Herinner de objecten
+          </BigButton>
+        )}
+
+        {onderdelen?.puntofstreep && (
+          <BigButton
+            icon="🔦"
+            color="yellow"
+            onClick={() => router.push("/speurtocht/puntofstreep")}
+          >
+            Punt of streep spel
+          </BigButton>
+        )}
+
+        {onderdelen?.geheimschrift && (
+          <BigButton
+            icon="📜"
+            color="purple"
+            onClick={() => router.push("/speurtocht/geheimschrift")}
+          >
+            Geheimschrift
+          </BigButton>
+        )}
+
+        {geenOnderdeelActief && (
           <p className="text-center opacity-80">
             Er is nog geen onderdeel gestart. Vraag de beheerder!
           </p>

@@ -20,6 +20,8 @@ import {
   OnderdelenSettings,
 } from "@/types/speurtocht";
 
+import LijstBeheerPaneel from "@/components/speurtocht/LijstBeheerPaneel";
+
 const KompasMapPicker = dynamic(
   () => import("@/components/speurtocht/KompasMapPicker"),
   { ssr: false }
@@ -27,7 +29,14 @@ const KompasMapPicker = dynamic(
 
 const ADMIN_CODE = "5712";
 
-type Tab = "onderdelen" | "kompas" | "fotospel" | "inzendingen";
+type Tab =
+  | "onderdelen"
+  | "kompas"
+  | "fotospel"
+  | "inzendingen"
+  | "herinner"
+  | "puntofstreep"
+  | "geheimschrift";
 
 export default function SpeurtochtBeheerPage() {
   return (
@@ -67,21 +76,42 @@ function BeheerPanel() {
           onClick={() => setTab("kompas")}
           className={`px-4 py-2 rounded-xl font-bold ${tab === "kompas" ? "bg-blue-600" : "bg-blue-900"}`}
         >
-          🧭 Onderdeel 1: Speurtocht
+          🧭 Speurtocht
         </button>
 
         <button
           onClick={() => setTab("fotospel")}
           className={`px-4 py-2 rounded-xl font-bold ${tab === "fotospel" ? "bg-yellow-600" : "bg-yellow-900"}`}
         >
-          📸 Onderdeel 2: Waar ben ik?
+          📸 Waar ben ik?
+        </button>
+
+        <button
+          onClick={() => setTab("herinner")}
+          className={`px-4 py-2 rounded-xl font-bold ${tab === "herinner" ? "bg-teal-600" : "bg-teal-900"}`}
+        >
+          🧠 Herinner de objecten
+        </button>
+
+        <button
+          onClick={() => setTab("puntofstreep")}
+          className={`px-4 py-2 rounded-xl font-bold ${tab === "puntofstreep" ? "bg-orange-600" : "bg-orange-900"}`}
+        >
+          🔦 Punt of Streep
+        </button>
+
+        <button
+          onClick={() => setTab("geheimschrift")}
+          className={`px-4 py-2 rounded-xl font-bold ${tab === "geheimschrift" ? "bg-pink-600" : "bg-pink-900"}`}
+        >
+          📜 Geheimschrift
         </button>
 
         <button
           onClick={() => setTab("inzendingen")}
           className={`px-4 py-2 rounded-xl font-bold ${tab === "inzendingen" ? "bg-purple-600" : "bg-purple-900"}`}
         >
-          🗂️ Inzendingen
+          🗂️ Inzendingen Waar ben ik?
         </button>
       </nav>
 
@@ -90,6 +120,23 @@ function BeheerPanel() {
         {tab === "kompas" && <KompasTab />}
         {tab === "fotospel" && <FotospelTab />}
         {tab === "inzendingen" && <InzendingenTab />}
+        {tab === "herinner" && (
+          <LijstBeheerPaneel soort="herinner" titel="🧠 Herinner de objecten" />
+        )}
+        {tab === "puntofstreep" && (
+          <LijstBeheerPaneel
+            soort="puntofstreep"
+            titel="🔦 Punt of Streep"
+            toonWoordenLijst
+          />
+        )}
+        {tab === "geheimschrift" && (
+          <LijstBeheerPaneel
+            soort="geheimschrift"
+            titel="📜 Geheimschrift"
+            vasteRegels={1}
+          />
+        )}
       </div>
     </main>
   );
@@ -131,7 +178,7 @@ function OnderdelenTab() {
               settings.kompas ? "bg-green-600" : "bg-red-700"
             }`}
           >
-            {settings.kompas ? "✅" : "❌"} Onderdeel 1: 🧭 Speurtocht
+            {settings.kompas ? "✅" : "❌"} 🧭 Speurtocht
           </button>
 
           <button
@@ -140,13 +187,36 @@ function OnderdelenTab() {
               settings.foto ? "bg-green-600" : "bg-red-700"
             }`}
           >
-            {settings.foto ? "✅" : "❌"} Onderdeel 2: 📸 Waar ben ik?
+            {settings.foto ? "✅" : "❌"} 📸 Waar ben ik?
+          </button>
+
+          <button
+            onClick={() => toggle("herinner")}
+            className={`w-full p-4 rounded-xl text-lg font-bold text-left ${
+              settings.herinner ? "bg-green-600" : "bg-red-700"
+            }`}
+          >
+            {settings.herinner ? "✅" : "❌"} 🧠 Herinner de objecten
+          </button>
+
+          <button
+            onClick={() => toggle("puntofstreep")}
+            className={`w-full p-4 rounded-xl text-lg font-bold text-left ${
+              settings.puntofstreep ? "bg-green-600" : "bg-red-700"
+            }`}
+          >
+            {settings.puntofstreep ? "✅" : "❌"} 🔦 Punt of Streep
+          </button>
+
+          <button
+            onClick={() => toggle("geheimschrift")}
+            className={`w-full p-4 rounded-xl text-lg font-bold text-left ${
+              settings.geheimschrift ? "bg-green-600" : "bg-red-700"
+            }`}
+          >
+            {settings.geheimschrift ? "✅" : "❌"} 📜 Geheimschrift
           </button>
         </div>
-
-        <p className="text-sm opacity-70 mt-4">
-          Nieuwe onderdelen komen hier later gewoon bij.
-        </p>
       </Card>
     </div>
   );

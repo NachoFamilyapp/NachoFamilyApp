@@ -56,9 +56,19 @@ export default function AboutPage() {
           <div>
             <h2 className="text-2xl font-bold mb-2">🧭 Onderdeel 3: Speurtocht</h2>
             <p className="opacity-90">
-              Een kompas-tocht langs punten in het park, en het Waar ben
-              ik?-fotospel. De beheerder bepaalt welke onderdelen op elk
-              moment zichtbaar zijn.
+              Vijf sub-onderdelen die de beheerder één voor één kan
+              activeren: Speurtocht (kompas-tocht), Waar ben ik?
+              (fotospel), Herinner de objecten, Punt of streep spel, en
+              Geheimschrift.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold mb-2">💡 Onderdeel 4: Morse Code</h2>
+            <p className="opacity-90">
+              Een lichtsignaal knippert een woord in morsecode — kun jij het
+              raden? Of laat de beheerder een live seinbericht sturen naar
+              alle telefoons tegelijk.
             </p>
           </div>
         </Card>

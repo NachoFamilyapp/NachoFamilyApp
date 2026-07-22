@@ -140,6 +140,18 @@ export default function HomePage() {
             </BigButton>
           )}
 
+          {modules?.morse && (
+            <BigButton
+              icon="💡"
+              color="yellow"
+              onClick={() =>
+                router.push("/morse")
+              }
+            >
+              Onderdeel 4: Morse Code
+            </BigButton>
+          )}
+
           <BigButton
             icon="🛠️"
             color="yellow"

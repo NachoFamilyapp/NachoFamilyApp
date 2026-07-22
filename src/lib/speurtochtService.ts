@@ -51,7 +51,13 @@ export class SpeurtochtService {
     const snapshot = await getDoc(ONDERDELEN_DOC);
 
     if (!snapshot.exists()) {
-      return { kompas: true, foto: false };
+      return {
+        kompas: true,
+        foto: false,
+        herinner: false,
+        puntofstreep: false,
+        geheimschrift: false,
+      };
     }
 
     const data = snapshot.data();
@@ -59,6 +65,9 @@ export class SpeurtochtService {
     return {
       kompas: data.kompas ?? true,
       foto: data.foto ?? false,
+      herinner: data.herinner ?? false,
+      puntofstreep: data.puntofstreep ?? false,
+      geheimschrift: data.geheimschrift ?? false,
     };
   }
 

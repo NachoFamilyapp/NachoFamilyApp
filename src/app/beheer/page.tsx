@@ -87,6 +87,16 @@ function BeheerHub() {
                 onManage={() => router.push("/speurtocht/beheer")}
                 manageLabel="Beheer"
               />
+
+              <ModuleRow
+                icon="💡"
+                title="Onderdeel 4: Morse Code"
+                subtitle="Raad het woord & live seinberichten"
+                active={modules.morse}
+                onToggle={() => toggle("morse")}
+                onManage={() => router.push("/morse/beheer")}
+                manageLabel="Beheer"
+              />
             </div>
           </Card>
         )}

@@ -19,6 +19,7 @@ export class AppModulesService {
       map: data.map ?? true,
       vlag: data.vlag ?? true,
       speurtocht: data.speurtocht ?? true,
+      morse: data.morse ?? true,
     };
   }
 

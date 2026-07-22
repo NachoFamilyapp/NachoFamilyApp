@@ -46,4 +46,7 @@ export interface FotoInzending {
 export interface OnderdelenSettings {
   kompas: boolean;
   foto: boolean;
+  herinner: boolean;
+  puntofstreep: boolean;
+  geheimschrift: boolean;
 }
