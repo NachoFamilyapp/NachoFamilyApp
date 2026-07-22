@@ -1,13 +1,23 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import BigButton from "@/components/ui/BigButton";
 import Card from "@/components/ui/Card";
 
+import { AppModulesService } from "@/lib/appModulesService";
+import { AppModules } from "@/types/appModules";
+
 export default function HomePage() {
 
   const router = useRouter();
+
+  const [modules, setModules] = useState<AppModules | null>(null);
+
+  useEffect(() => {
+    AppModulesService.getModules().then(setModules);
+  }, []);
 
   return (
 
@@ -51,7 +61,7 @@ export default function HomePage() {
 
         <div className="text-8xl">
 
-          🦁
+          🏖️
 
         </div>
 
@@ -63,7 +73,7 @@ export default function HomePage() {
           drop-shadow-lg
         "
         >
-          NachoFamilyApp
+          Vakantie App
         </h1>
 
         <p
@@ -84,44 +94,60 @@ export default function HomePage() {
 
         <div className="space-y-5">
 
-          <BigButton
-            icon="🟢"
-            color="green"
-            onClick={() =>
-              router.push("/create-game")
-            }
-          >
-            Maak Game
-          </BigButton>
+          {modules?.map && (
+            <BigButton
+              icon="🗺️"
+              color="blue"
+              onClick={() => router.push("/kaart")}
+            >
+              Onderdeel 1: Kaart
+            </BigButton>
+          )}
+
+          {modules?.vlag && (
+            <>
+              <BigButton
+                icon="🟢"
+                color="green"
+                onClick={() =>
+                  router.push("/create-game")
+                }
+              >
+                Onderdeel 2: Vlag Veroveren starten
+              </BigButton>
+
+              <BigButton
+                icon="🔵"
+                color="blue"
+                onClick={() =>
+                  router.push("/join-game")
+                }
+              >
+                Meedoen aan Vlag Veroveren
+              </BigButton>
+            </>
+          )}
+
+          {modules?.speurtocht && (
+            <BigButton
+              icon="🧭"
+              color="purple"
+              onClick={() =>
+                router.push("/speurtocht")
+              }
+            >
+              Onderdeel 3: Speurtocht
+            </BigButton>
+          )}
 
           <BigButton
-            icon="🔵"
-            color="blue"
-            onClick={() =>
-              router.push("/join-game")
-            }
-          >
-            Join Game
-          </BigButton>
-
-          <BigButton
-            icon="⚙️"
+            icon="🛠️"
             color="yellow"
             onClick={() =>
-              router.push("/admin")
+              router.push("/beheer")
             }
           >
-            Instellingen
-          </BigButton>
-
-          <BigButton
-            icon="🧭"
-            color="purple"
-            onClick={() =>
-              router.push("/speurtocht")
-            }
-          >
-            Speurtocht
+            Hoofdbeheer
           </BigButton>
 
           <BigButton
@@ -156,7 +182,7 @@ export default function HomePage() {
 
         <div>
 
-          🦁 Powered by Nacho
+          🏖️ Vakantie App
 
         </div>
 

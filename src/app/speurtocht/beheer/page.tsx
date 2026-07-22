@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 
 import Card from "@/components/ui/Card";
 import BigButton from "@/components/ui/BigButton";
+import PasswordGate from "@/components/PasswordGate";
 
 import { SpeurtochtService } from "@/lib/speurtochtService";
 import { compressImageFile } from "@/lib/imageUtils";
@@ -25,71 +26,20 @@ const KompasMapPicker = dynamic(
 );
 
 const ADMIN_CODE = "5712";
-const SESSION_KEY = "speurtocht_admin_ok";
 
 type Tab = "onderdelen" | "kompas" | "fotospel" | "inzendingen";
 
 export default function SpeurtochtBeheerPage() {
-  const router = useRouter();
-
-  const [unlocked, setUnlocked] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return sessionStorage.getItem(SESSION_KEY) === "true";
-  });
-  const [codeInput, setCodeInput] = useState("");
-  const [codeError, setCodeError] = useState(false);
-
-  function checkCode() {
-    if (codeInput === ADMIN_CODE) {
-      sessionStorage.setItem(SESSION_KEY, "true");
-      setUnlocked(true);
-      setCodeError(false);
-    } else {
-      setCodeError(true);
-    }
-  }
-
-  if (!unlocked) {
-    return (
-      <main className="min-h-screen flex flex-col items-center justify-center p-6 text-white">
-        <Card className="w-full max-w-sm text-white text-center">
-          <div className="text-5xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold mb-4">Beheer Speurtocht</h1>
-          <p className="opacity-80 mb-4">Voer de toegangscode in</p>
-
-          <input
-            type="password"
-            inputMode="numeric"
-            value={codeInput}
-            onChange={(e) => {
-              setCodeInput(e.target.value);
-              setCodeError(false);
-            }}
-            onKeyDown={(e) => e.key === "Enter" && checkCode()}
-            placeholder="••••"
-            className="w-full rounded-xl p-4 text-black bg-white border-2 border-white/50 focus:border-purple-400 outline-none text-center text-3xl tracking-[0.5em] mb-4"
-          />
-
-          {codeError && (
-            <p className="text-red-300 mb-4">❌ Onjuiste code</p>
-          )}
-
-          <BigButton icon="🔓" color="purple" onClick={checkCode}>
-            Openen
-          </BigButton>
-
-          <button
-            onClick={() => router.push("/speurtocht")}
-            className="underline opacity-80 mt-4 block mx-auto"
-          >
-            ← Terug
-          </button>
-        </Card>
-      </main>
-    );
-  }
-
-  return <BeheerPanel />;
+  return (
+    <PasswordGate
+      code={ADMIN_CODE}
+      sessionKey="speurtocht_admin_ok"
+      title="Beheer Speurtocht"
+      backHref="/speurtocht"
+    >
+      <BeheerPanel />
+    </PasswordGate>
+  );
 }
 
 function BeheerPanel() {

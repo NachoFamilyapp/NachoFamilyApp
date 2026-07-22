@@ -5,13 +5,13 @@ import GameProvider from "@/components/GameProvider";
 import ThemedBackground from "@/components/ThemedBackground";
 
 export const metadata: Metadata = {
-  title: "NachoFamilyApp",
+  title: "Vakantie App",
   description: "Outdoor Multiplayer Family Game",
-  applicationName: "NachoFamilyApp",
+  applicationName: "Vakantie App",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "NachoFamilyApp",
+    title: "Vakantie App",
   },
 };
 

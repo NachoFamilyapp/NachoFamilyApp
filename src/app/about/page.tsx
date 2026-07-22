@@ -14,7 +14,15 @@ export default function AboutPage() {
 
         <Card className="text-white space-y-5">
           <div>
-            <h2 className="text-2xl font-bold mb-2">🚩 Verover de Vlag</h2>
+            <h2 className="text-2xl font-bold mb-2">🗺️ Onderdeel 1: Kaart</h2>
+            <p className="opacity-90">
+              Vul de lengte van je kind in en zie meteen bij welke attracties
+              van Slagharen ze wel of niet naar binnen mogen.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold mb-2">🚩 Onderdeel 2: Verover de Vlag</h2>
             <p className="opacity-90">
               Twee teams (rood en blauw) proberen elkaars vlag te veroveren en
               veilig naar hun eigen basis te brengen. Een team wint zodra het
@@ -46,11 +54,11 @@ export default function AboutPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold mb-2">🧭 Speurtocht</h2>
+            <h2 className="text-2xl font-bold mb-2">🧭 Onderdeel 3: Speurtocht</h2>
             <p className="opacity-90">
-              Los van Verover de Vlag kun je ook een Speurtocht maken: een
-              route van punten die je met het kompas van je telefoon moet
-              vinden.
+              Een kompas-tocht langs punten in het park, en het Waar ben
+              ik?-fotospel. De beheerder bepaalt welke onderdelen op elk
+              moment zichtbaar zijn.
             </p>
           </div>
         </Card>
