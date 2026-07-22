@@ -92,6 +92,14 @@ function BeheerHub() {
         )}
 
         <button
+          onClick={() => router.push("/beheer/gebruikers")}
+          className="bg-white/15 rounded-2xl p-4 flex items-center gap-3 font-bold text-lg"
+        >
+          <span className="text-3xl">👥</span>
+          Gebruikers bekijken en beheren
+        </button>
+
+        <button
           onClick={() => router.push("/")}
           className="underline opacity-80 mx-auto mt-2"
         >
