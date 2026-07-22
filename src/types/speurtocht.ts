@@ -35,7 +35,9 @@ export interface FotoUitdaging {
 export interface FotoInzending {
   id: string;
   challengeId: string;
-  playerName: string;
+  userId: string;
+  userName: string;
+  team: string;
   photoImage: string;
   status: "pending" | "approved" | "rejected";
   submittedAt: number;

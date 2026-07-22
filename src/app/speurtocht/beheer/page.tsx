@@ -610,7 +610,7 @@ function InzendingenTab() {
       {pending.map((i) => (
         <Card key={i.id} className="text-white">
           <div className="font-bold mb-1">
-            {i.playerName} — {challengeTitle(i.challengeId)}
+            {i.userName} ({i.team}) — {challengeTitle(i.challengeId)}
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -644,7 +644,7 @@ function InzendingenTab() {
               className="bg-black/30 rounded-xl p-3 flex justify-between items-center"
             >
               <span>
-                {i.playerName} — {challengeTitle(i.challengeId)}
+                {i.userName} ({i.team}) — {challengeTitle(i.challengeId)}
               </span>
               <span>
                 {i.status === "approved" ? "✅" : "❌"}

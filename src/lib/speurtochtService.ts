@@ -124,7 +124,7 @@ export class SpeurtochtService {
     await updateDoc(doc(INZENDINGEN_COL, id), { status });
   }
 
-  static async getPlayerScore(playerName: string): Promise<number> {
+  static async getTeamScore(team: string): Promise<number> {
     const uitdagingen = await this.getUitdagingen();
     const inzendingen = await this.getInzendingen();
 
@@ -133,11 +133,23 @@ export class SpeurtochtService {
     );
 
     return inzendingen
-      .filter(
-        (i) =>
-          i.playerName === playerName &&
-          i.status === "approved"
-      )
+      .filter((i) => i.team === team && i.status === "approved")
+      .reduce(
+        (sum, i) => sum + (pointsByChallenge.get(i.challengeId) ?? 1),
+        0
+      );
+  }
+
+  static async getUserScore(userId: string): Promise<number> {
+    const uitdagingen = await this.getUitdagingen();
+    const inzendingen = await this.getInzendingen();
+
+    const pointsByChallenge = new Map(
+      uitdagingen.map((u) => [u.id, u.points])
+    );
+
+    return inzendingen
+      .filter((i) => i.userId === userId && i.status === "approved")
       .reduce(
         (sum, i) => sum + (pointsByChallenge.get(i.challengeId) ?? 1),
         0

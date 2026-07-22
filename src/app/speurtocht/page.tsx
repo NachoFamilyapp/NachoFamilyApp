@@ -22,8 +22,8 @@ export default function SpeurtochtHomePage() {
     SpeurtochtService.getOnderdelenSettings().then(setOnderdelen);
 
     Promise.all([
-      SpeurtochtService.getPlayerScore("Rood team"),
-      SpeurtochtService.getPlayerScore("Blauw team"),
+      SpeurtochtService.getTeamScore("Rood team"),
+      SpeurtochtService.getTeamScore("Blauw team"),
     ]).then(([rood, blauw]) => setScores({ rood, blauw }));
   }, []);
 

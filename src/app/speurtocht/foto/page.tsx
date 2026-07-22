@@ -8,6 +8,7 @@ import TeamPicker, {
   getStoredSpeurtochtTeam,
   SpeurtochtTeam,
 } from "@/components/speurtocht/TeamPicker";
+import { useUser } from "@/components/UserProvider";
 
 import { SpeurtochtService } from "@/lib/speurtochtService";
 import { compressImageFile } from "@/lib/imageUtils";
@@ -15,6 +16,7 @@ import { FotoUitdaging, FotoInzending } from "@/types/speurtocht";
 
 export default function WaarBenIkPage() {
   const router = useRouter();
+  const { uid, profile } = useUser();
 
   const [active, setActive] = useState<boolean | null>(null);
   const [uitdagingen, setUitdagingen] = useState<FotoUitdaging[]>([]);
@@ -24,7 +26,9 @@ export default function WaarBenIkPage() {
 
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  async function refresh(teamName: string) {
+  async function refresh() {
+    if (!uid) return;
+
     const [settings, list, all] = await Promise.all([
       SpeurtochtService.getOnderdelenSettings(),
       SpeurtochtService.getUitdagingen(),
@@ -33,38 +37,42 @@ export default function WaarBenIkPage() {
 
     setActive(settings.foto);
     setUitdagingen(list);
-    setMineSubmissions(all.filter((s) => s.playerName === teamName));
+    setMineSubmissions(all.filter((s) => s.userId === uid));
 
-    const teamScore = await SpeurtochtService.getPlayerScore(teamName);
-    setScore(teamScore);
+    const myScore = await SpeurtochtService.getUserScore(uid);
+    setScore(myScore);
   }
 
   useEffect(() => {
-    if (team) {
+    if (team && uid) {
       // refresh() is async; state-updates gebeuren na een await.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      refresh(team);
+      refresh();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [uid]);
 
   function chooseTeam(chosen: SpeurtochtTeam) {
     setTeam(chosen);
-    refresh(chosen);
+    refresh();
   }
 
   async function submitPhoto(challengeId: string, file: File) {
+    if (!uid || !profile) return;
+
     setBusyId(challengeId);
     try {
       const compressed = await compressImageFile(file, 900, 0.6);
 
       await SpeurtochtService.submitInzending({
         challengeId,
-        playerName: team,
+        userId: uid,
+        userName: profile.name,
+        team,
         photoImage: compressed,
       });
 
-      await refresh(team);
+      await refresh();
       alert("📸 Foto ingestuurd! De beheerder beoordeelt 'm zo.");
     } catch (error) {
       console.error(error);
@@ -97,7 +105,7 @@ export default function WaarBenIkPage() {
         <div className="text-5xl mb-2">📸</div>
         <h1 className="text-2xl font-bold">Waar ben ik?</h1>
         <p className="opacity-80">
-          {team} · score: 🏆 {score} punten
+          {profile?.name} · {team} · score: 🏆 {score} punten
         </p>
       </div>
 
