@@ -43,3 +43,46 @@ export function compressImageFile(
     reader.readAsDataURL(file);
   });
 }
+
+/**
+ * Comprimeer een foto zo dat hij gegarandeerd onder een bepaalde
+ * bestandsgrootte blijft (standaard 900KB, ruim onder de 1MB-limiet
+ * per Firestore-document). Probeert eerst een goede kwaliteit, en
+ * verkleint/comprimeert automatisch verder als het nog te groot is.
+ * Geeft ook aan of het gelukt is om onder de limiet te komen.
+ */
+export async function compressImageForStorage(
+  file: File,
+  maxBytes = 900_000
+): Promise<{ dataUrl: string; withinLimit: boolean }> {
+  const pogingen = [
+    { maxWidth: 1400, quality: 0.7 },
+    { maxWidth: 1400, quality: 0.5 },
+    { maxWidth: 1000, quality: 0.5 },
+    { maxWidth: 1000, quality: 0.35 },
+    { maxWidth: 700, quality: 0.35 },
+    { maxWidth: 500, quality: 0.3 },
+  ];
+
+  let laatsteResultaat = "";
+
+  for (const poging of pogingen) {
+    const dataUrl = await compressImageFile(
+      file,
+      poging.maxWidth,
+      poging.quality
+    );
+
+    laatsteResultaat = dataUrl;
+
+    // Base64 is ~33% groter dan de eigenlijke bytes; dit schat de
+    // echte bestandsgrootte in zonder een aparte Blob te hoeven maken.
+    const geschatteBytes = Math.ceil((dataUrl.length * 3) / 4);
+
+    if (geschatteBytes <= maxBytes) {
+      return { dataUrl, withinLimit: true };
+    }
+  }
+
+  return { dataUrl: laatsteResultaat, withinLimit: false };
+}

@@ -16,6 +16,42 @@ type CompassProps = {
   label?: string;
 };
 
+const CENTER = 150;
+const OUTER_RADIUS = 140;
+const TICK_OUTER = 128;
+const MINOR_TICK_INNER = 120;
+const MAJOR_TICK_INNER = 112;
+const CARDINAL_TICK_INNER = 104;
+const LABEL_RADIUS = 95;
+
+function poolCoord(deg: number, radius: number) {
+  const rad = (deg * Math.PI) / 180;
+  return {
+    x: CENTER + radius * Math.sin(rad),
+    y: CENTER - radius * Math.cos(rad),
+  };
+}
+
+function majorLabel(deg: number): string {
+  if (deg === 0) return "N";
+  if (deg === 90) return "O";
+  if (deg === 180) return "Z";
+  if (deg === 270) return "W";
+  return String(deg);
+}
+
+function cardinal8(deg: number): string {
+  const dirs = ["N", "NO", "O", "ZO", "Z", "ZW", "W", "NW"];
+  const index = Math.round((((deg % 360) + 360) % 360) / 45) % 8;
+  return dirs[index];
+}
+
+const MINOR_DEGREES = Array.from({ length: 36 }, (_, i) => i * 10).filter(
+  (d) => d % 30 !== 0
+);
+
+const MAJOR_DEGREES = Array.from({ length: 12 }, (_, i) => i * 30);
+
 export default function Compass({
   currentPosition,
   targetPosition,
@@ -69,7 +105,32 @@ export default function Compass({
     return distanceBetween(currentPosition, targetPosition);
   }, [currentPosition, targetPosition]);
 
-  const rotation = targetBearing - heading;
+  const naaldRotatie = targetBearing - heading;
+
+  const minorTicks = useMemo(
+    () =>
+      MINOR_DEGREES.map((deg) => {
+        const outer = poolCoord(deg, TICK_OUTER);
+        const inner = poolCoord(deg, MINOR_TICK_INNER);
+        return { deg, outer, inner };
+      }),
+    []
+  );
+
+  const majorTicks = useMemo(
+    () =>
+      MAJOR_DEGREES.map((deg) => {
+        const isCardinal = deg % 90 === 0;
+        const outer = poolCoord(deg, TICK_OUTER);
+        const inner = poolCoord(
+          deg,
+          isCardinal ? CARDINAL_TICK_INNER : MAJOR_TICK_INNER
+        );
+        const labelPos = poolCoord(deg, LABEL_RADIUS);
+        return { deg, isCardinal, outer, inner, labelPos };
+      }),
+    []
+  );
 
   if (needsPermission) {
     return (
@@ -105,32 +166,128 @@ export default function Compass({
         <div className="text-xl font-bold mb-2 text-center">{label}</div>
       )}
 
-      <div className="relative w-64 h-64 rounded-full border-8 border-gray-700 bg-white">
+      <div className="relative w-72 h-72">
 
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 text-red-600 font-bold">
-          N
-        </div>
+        <svg viewBox="0 0 300 300" className="w-full h-full drop-shadow-xl">
 
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-black">
-          Z
-        </div>
+          <defs>
+            <radialGradient id="dialGradient" cx="50%" cy="45%" r="70%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#0b0f19" />
+            </radialGradient>
+          </defs>
 
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-black">
-          W
-        </div>
+          {/* Buitenring */}
+          <circle
+            cx={CENTER}
+            cy={CENTER}
+            r={OUTER_RADIUS}
+            fill="url(#dialGradient)"
+            stroke="#4b5563"
+            strokeWidth={3}
+          />
 
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-black">
-          O
-        </div>
+          {/* Draaiende wijzerplaat met streepjes en graden */}
+          <g
+            style={{
+              transform: `rotate(${-heading}deg)`,
+              transformOrigin: `${CENTER}px ${CENTER}px`,
+              transition: "transform 150ms linear",
+            }}
+          >
 
-        <div
-          className="absolute left-1/2 top-1/2 origin-bottom transition-transform duration-300"
-          style={{
-            transform: `translate(-50%, -100%) rotate(${rotation}deg)`,
-          }}
-        >
-          <div className="text-6xl">▲</div>
-        </div>
+            {minorTicks.map(({ deg, outer, inner }) => (
+              <line
+                key={deg}
+                x1={outer.x}
+                y1={outer.y}
+                x2={inner.x}
+                y2={inner.y}
+                stroke="#6b7280"
+                strokeWidth={1.5}
+              />
+            ))}
+
+            {majorTicks.map(({ deg, isCardinal, outer, inner, labelPos }) => (
+              <g key={deg}>
+                <line
+                  x1={outer.x}
+                  y1={outer.y}
+                  x2={inner.x}
+                  y2={inner.y}
+                  stroke={isCardinal && deg === 0 ? "#ef4444" : "#e5e7eb"}
+                  strokeWidth={isCardinal ? 3.5 : 2.5}
+                />
+
+                <g
+                  transform={`translate(${labelPos.x} ${labelPos.y}) rotate(${heading - deg})`}
+                >
+                  <text
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fontSize={isCardinal ? 22 : 13}
+                    fontWeight="bold"
+                    fill={isCardinal && deg === 0 ? "#ef4444" : "#e5e7eb"}
+                  >
+                    {majorLabel(deg)}
+                  </text>
+                </g>
+              </g>
+            ))}
+
+          </g>
+
+          {/* Vaste inkeping bovenaan: dit is waar je nu naartoe kijkt */}
+          <polygon points="150,10 141,32 159,32" fill="#f3f4f6" />
+
+          {/* Naald die naar het doel wijst */}
+          {targetPosition && (
+            <g
+              style={{
+                transform: `rotate(${naaldRotatie}deg)`,
+                transformOrigin: `${CENTER}px ${CENTER}px`,
+                transition: "transform 150ms linear",
+              }}
+            >
+              <polygon
+                points={`${CENTER},40 ${CENTER - 9},${CENTER} ${CENTER + 9},${CENTER}`}
+                fill="#f59e0b"
+              />
+              <polygon
+                points={`${CENTER - 9},${CENTER} ${CENTER + 9},${CENTER} ${CENTER},${CENTER + 34}`}
+                fill="#d1d5db"
+              />
+              <circle cx={CENTER} cy={CENTER} r={10} fill="#111827" stroke="#f59e0b" strokeWidth={3} />
+            </g>
+          )}
+
+          {!targetPosition && (
+            <circle cx={CENTER} cy={CENTER} r={10} fill="#111827" stroke="#9ca3af" strokeWidth={3} />
+          )}
+
+          {/* Middenweergave: huidige richting in graden */}
+          <text
+            x={CENTER}
+            y={CENTER + 62}
+            textAnchor="middle"
+            fontSize={22}
+            fontWeight="bold"
+            fill="#f9fafb"
+          >
+            {hasHeading ? `${Math.round(heading)}°` : "--°"}
+          </text>
+
+          <text
+            x={CENTER}
+            y={CENTER + 82}
+            textAnchor="middle"
+            fontSize={14}
+            fill="#9ca3af"
+          >
+            {hasHeading ? cardinal8(heading) : "..."}
+          </text>
+
+        </svg>
 
       </div>
 

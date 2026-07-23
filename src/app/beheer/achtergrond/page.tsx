@@ -7,7 +7,7 @@ import Card from "@/components/ui/Card";
 import PasswordGate from "@/components/PasswordGate";
 
 import { AppThemeService } from "@/lib/appThemeService";
-import { compressImageFile } from "@/lib/imageUtils";
+import { compressImageForStorage } from "@/lib/imageUtils";
 import { AppTheme, DEFAULT_APP_THEME } from "@/types/appTheme";
 
 const ADMIN_CODE = "5712";
@@ -40,12 +40,20 @@ function AchtergrondPaneel() {
   }, []);
 
   async function opslaan(next: AppTheme) {
-    setThemeState(next);
     setSaving(true);
     try {
       await AppThemeService.setTheme(next);
+      setThemeState(next);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      console.error(error);
+      alert(
+        "❌ Opslaan is mislukt. De wijziging is NIET bewaard. " +
+          "Mogelijke oorzaken: de afbeelding is te groot, of er is geen " +
+          "toegang tot de database. Probeer een kleinere foto of check je " +
+          "internetverbinding."
+      );
     } finally {
       setSaving(false);
     }
@@ -56,14 +64,28 @@ function AchtergrondPaneel() {
 
     setUploading(true);
     try {
-      const compressed = await compressImageFile(file, 1400, 0.7);
-      await opslaan({ ...theme, backgroundImage: compressed });
+      const { dataUrl, withinLimit } = await compressImageForStorage(file);
+
+      if (!withinLimit) {
+        alert(
+          "❌ Deze afbeelding is te groot/gedetailleerd om op te slaan, " +
+            "zelfs na comprimeren. Kies een eenvoudigere of kleinere foto."
+        );
+        return;
+      }
+
+      await opslaan({ ...theme, backgroundImage: dataUrl });
     } catch (error) {
       console.error(error);
       alert("Afbeelding uploaden mislukt");
     } finally {
       setUploading(false);
     }
+  }
+
+  function kleurWijzigen(kleur: string) {
+    if (!theme) return;
+    opslaan({ ...theme, backgroundColor: kleur });
   }
 
   async function afbeeldingVerwijderen() {
@@ -101,9 +123,7 @@ function AchtergrondPaneel() {
             <input
               type="color"
               value={theme.backgroundColor}
-              onChange={(e) =>
-                opslaan({ ...theme, backgroundColor: e.target.value })
-              }
+              onChange={(e) => kleurWijzigen(e.target.value)}
               className="w-16 h-12 rounded-lg cursor-pointer bg-transparent"
             />
             <span className="font-bold">{theme.backgroundColor}</span>

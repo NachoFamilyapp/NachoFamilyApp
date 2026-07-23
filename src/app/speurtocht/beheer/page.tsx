@@ -9,7 +9,7 @@ import BigButton from "@/components/ui/BigButton";
 import PasswordGate from "@/components/PasswordGate";
 
 import { SpeurtochtService } from "@/lib/speurtochtService";
-import { compressImageFile } from "@/lib/imageUtils";
+import { compressImageForStorage } from "@/lib/imageUtils";
 import { DEFAULT_KOMPAS_SPEURTOCHT } from "@/config/speurtochtDefault";
 
 import {
@@ -493,8 +493,22 @@ function FotospelTab() {
   }, []);
 
   async function handleFile(file: File) {
-    const compressed = await compressImageFile(file, 900, 0.6);
-    setImagePreview(compressed);
+    try {
+      const { dataUrl, withinLimit } = await compressImageForStorage(file);
+
+      if (!withinLimit) {
+        alert(
+          "❌ Deze foto is te groot/gedetailleerd, zelfs na comprimeren. " +
+            "Kies een eenvoudigere of kleinere foto."
+        );
+        return;
+      }
+
+      setImagePreview(dataUrl);
+    } catch (error) {
+      console.error(error);
+      alert("Foto laden mislukt");
+    }
   }
 
   async function addChallenge() {

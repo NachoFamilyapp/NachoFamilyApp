@@ -11,7 +11,7 @@ import TeamPicker, {
 import { useUser } from "@/components/UserProvider";
 
 import { SpeurtochtService } from "@/lib/speurtochtService";
-import { compressImageFile } from "@/lib/imageUtils";
+import { compressImageForStorage } from "@/lib/imageUtils";
 import { FotoUitdaging, FotoInzending } from "@/types/speurtocht";
 
 export default function WaarBenIkPage() {
@@ -62,14 +62,22 @@ export default function WaarBenIkPage() {
 
     setBusyId(challengeId);
     try {
-      const compressed = await compressImageFile(file, 900, 0.6);
+      const { dataUrl, withinLimit } = await compressImageForStorage(file);
+
+      if (!withinLimit) {
+        alert(
+          "❌ Deze foto is te groot/gedetailleerd om te versturen. Probeer" +
+            " een andere foto of maak 'm iets minder ingezoomd."
+        );
+        return;
+      }
 
       await SpeurtochtService.submitInzending({
         challengeId,
         userId: uid,
         userName: profile.name,
         team,
-        photoImage: compressed,
+        photoImage: dataUrl,
       });
 
       await refresh();
