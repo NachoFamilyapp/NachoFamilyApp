@@ -1,23 +1,33 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
-import { useGame } from "@/components/GameProvider";
-import { getBackground } from "@/config/backgrounds";
+import { AppThemeService } from "@/lib/appThemeService";
+import { AppTheme, DEFAULT_APP_THEME } from "@/types/appTheme";
 
 type Props = {
   children: ReactNode;
 };
 
 export default function ThemedBackground({ children }: Props) {
+  const [theme, setTheme] = useState<AppTheme>(DEFAULT_APP_THEME);
 
-  const { game } = useGame();
-
-  const background = getBackground(game?.settings?.theme);
+  useEffect(() => {
+    AppThemeService.getTheme().then(setTheme);
+  }, []);
 
   return (
     <div
-      className={`min-h-screen bg-gradient-to-b ${background.gradient} transition-colors duration-700`}
+      className="min-h-screen transition-colors duration-700"
+      style={{
+        backgroundColor: theme.backgroundColor,
+        backgroundImage: theme.backgroundImage
+          ? `url(${theme.backgroundImage})`
+          : undefined,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
     >
       {children}
     </div>

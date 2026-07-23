@@ -14,7 +14,7 @@ export default function AboutPage() {
 
         <Card className="text-white space-y-5">
           <div>
-            <h2 className="text-2xl font-bold mb-2">🗺️ Onderdeel 1: Kaart</h2>
+            <h2 className="text-2xl font-bold mb-2">🗺️ Slagharen app</h2>
             <p className="opacity-90">
               Vul de lengte van je kind in en zie meteen bij welke attracties
               van Slagharen ze wel of niet naar binnen mogen.
@@ -22,7 +22,7 @@ export default function AboutPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold mb-2">🚩 Onderdeel 2: Verover de Vlag</h2>
+            <h2 className="text-2xl font-bold mb-2">🚩 Vlag Veroveren</h2>
             <p className="opacity-90">
               Twee teams (rood en blauw) proberen elkaars vlag te veroveren en
               veilig naar hun eigen basis te brengen. Een team wint zodra het
@@ -32,7 +32,7 @@ export default function AboutPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold mb-2">📱 Zo speel je</h2>
+            <h2 className="text-2xl font-bold mb-2">📱 Zo speel je Vlag Veroveren</h2>
             <ol className="list-decimal list-inside space-y-1 opacity-90">
               <li>Eén speler maakt een spel aan en wordt host.</li>
               <li>Andere spelers joinen met de 4-cijferige code.</li>
@@ -54,7 +54,7 @@ export default function AboutPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold mb-2">🧭 Onderdeel 3: Speurtocht</h2>
+            <h2 className="text-2xl font-bold mb-2">🧭 Speurtocht</h2>
             <p className="opacity-90">
               Vijf sub-onderdelen die de beheerder één voor één kan
               activeren: Speurtocht (kompas-tocht), Waar ben ik?
@@ -64,11 +64,19 @@ export default function AboutPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold mb-2">💡 Onderdeel 4: Morse Code</h2>
+            <h2 className="text-2xl font-bold mb-2">💡 Morse Spel</h2>
             <p className="opacity-90">
-              Een lichtsignaal knippert een woord in morsecode — kun jij het
-              raden? Of laat de beheerder een live seinbericht sturen naar
-              alle telefoons tegelijk.
+              De beheerder stuurt een woord naar alle telefoons; het licht
+              knippert de morsecode ervan. Typ het antwoord in met het
+              toetsenbord op het scherm.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold mb-2">🚨 Noodbericht</h2>
+            <p className="opacity-90">
+              De beheerder kan een moorse noodbericht sturen naar alle
+              spelers, of alleen naar gekozen spelers.
             </p>
           </div>
         </Card>

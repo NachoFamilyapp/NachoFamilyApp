@@ -20,6 +20,7 @@ export class AppModulesService {
       vlag: data.vlag ?? true,
       speurtocht: data.speurtocht ?? true,
       morse: data.morse ?? true,
+      noodbericht: data.noodbericht ?? true,
     };
   }
 

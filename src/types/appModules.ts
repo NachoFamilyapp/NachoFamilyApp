@@ -3,6 +3,7 @@ export interface AppModules {
   vlag: boolean;
   speurtocht: boolean;
   morse: boolean;
+  noodbericht: boolean;
 }
 
 export const DEFAULT_APP_MODULES: AppModules = {
@@ -10,4 +11,5 @@ export const DEFAULT_APP_MODULES: AppModules = {
   vlag: true,
   speurtocht: true,
   morse: true,
+  noodbericht: true,
 };

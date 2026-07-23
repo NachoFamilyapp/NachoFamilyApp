@@ -60,7 +60,7 @@ function BeheerHub() {
             <div className="flex flex-col gap-3">
               <ModuleRow
                 icon="🗺️"
-                title="Onderdeel 1: Kaart"
+                title="Slagharen app"
                 subtitle="Toegankelijkheid van attracties opzoeken"
                 active={modules.map}
                 onToggle={() => toggle("map")}
@@ -70,7 +70,7 @@ function BeheerHub() {
 
               <ModuleRow
                 icon="🚩"
-                title="Onderdeel 2: Vlag Veroveren"
+                title="Vlag Veroveren"
                 subtitle="Buiten spelen met GPS, 2 teams"
                 active={modules.vlag}
                 onToggle={() => toggle("vlag")}
@@ -80,8 +80,8 @@ function BeheerHub() {
 
               <ModuleRow
                 icon="🧭"
-                title="Onderdeel 3: Speurtocht"
-                subtitle="Kompas-tocht en Waar ben ik?"
+                title="Speurtocht"
+                subtitle="Kompas-tocht, Waar ben ik?, en meer"
                 active={modules.speurtocht}
                 onToggle={() => toggle("speurtocht")}
                 onManage={() => router.push("/speurtocht/beheer")}
@@ -90,16 +90,34 @@ function BeheerHub() {
 
               <ModuleRow
                 icon="💡"
-                title="Onderdeel 4: Morse Code"
-                subtitle="Raad het woord & live seinberichten"
+                title="Morse Spel"
+                subtitle="Raad het woord"
                 active={modules.morse}
                 onToggle={() => toggle("morse")}
                 onManage={() => router.push("/morse/beheer")}
                 manageLabel="Beheer"
               />
+
+              <ModuleRow
+                icon="🚨"
+                title="Noodbericht"
+                subtitle="Stuur een moorse noodbericht naar (gekozen) spelers"
+                active={modules.noodbericht}
+                onToggle={() => toggle("noodbericht")}
+                onManage={() => router.push("/noodbericht/beheer")}
+                manageLabel="Beheer"
+              />
             </div>
           </Card>
         )}
+
+        <button
+          onClick={() => router.push("/beheer/achtergrond")}
+          className="bg-white/15 rounded-2xl p-4 flex items-center gap-3 font-bold text-lg"
+        >
+          <span className="text-3xl">🎨</span>
+          Achtergrond aanpassen
+        </button>
 
         <button
           onClick={() => router.push("/beheer/gebruikers")}

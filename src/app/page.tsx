@@ -6,18 +6,49 @@ import { useRouter } from "next/navigation";
 import BigButton from "@/components/ui/BigButton";
 import Card from "@/components/ui/Card";
 
+import { useUser } from "@/components/UserProvider";
 import { AppModulesService } from "@/lib/appModulesService";
 import { AppModules } from "@/types/appModules";
 
-export default function HomePage() {
+type Stap = "kies" | "naam" | "menu";
 
+export default function HomePage() {
   const router = useRouter();
+  const { profile, setName } = useUser();
+
+  const [stap, setStap] = useState<Stap>("kies");
+  const [naamInput, setNaamInput] = useState("");
+  const [opslaan, setOpslaan] = useState(false);
 
   const [modules, setModules] = useState<AppModules | null>(null);
 
   useEffect(() => {
     AppModulesService.getModules().then(setModules);
   }, []);
+
+  function kiesGebruiker() {
+    if (profile) {
+      setStap("menu");
+    } else {
+      setStap("naam");
+    }
+  }
+
+  function kiesBeheerder() {
+    router.push("/beheer");
+  }
+
+  async function bevestigNaam() {
+    if (!naamInput.trim()) return;
+
+    setOpslaan(true);
+    try {
+      await setName(naamInput.trim());
+      setStap("menu");
+    } finally {
+      setOpslaan(false);
+    }
+  }
 
   return (
 
@@ -88,91 +119,118 @@ export default function HomePage() {
 
       </div>
 
-      {/* Menu */}
+      {/* Inhoud */}
 
       <Card className="w-full max-w-md">
 
-        <div className="space-y-5">
-
-          {modules?.map && (
-            <BigButton
-              icon="🗺️"
-              color="blue"
-              onClick={() => router.push("/kaart")}
-            >
-              Onderdeel 1: Kaart
+        {stap === "kies" && (
+          <div className="space-y-5">
+            <BigButton icon="👤" color="green" onClick={kiesGebruiker}>
+              Ik ben een gebruiker
             </BigButton>
-          )}
 
-          {modules?.vlag && (
-            <>
-              <BigButton
-                icon="🟢"
-                color="green"
-                onClick={() =>
-                  router.push("/create-game")
-                }
-              >
-                Onderdeel 2: Vlag Veroveren starten
-              </BigButton>
+            <BigButton icon="🔑" color="purple" onClick={kiesBeheerder}>
+              Ik ben de beheerder
+            </BigButton>
+          </div>
+        )}
 
+        {stap === "naam" && (
+          <div className="space-y-4 text-center">
+            <p className="text-lg font-bold">Wat is je naam?</p>
+
+            <input
+              value={naamInput}
+              onChange={(e) => setNaamInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && bevestigNaam()}
+              placeholder="Jouw naam"
+              className="w-full rounded-xl p-4 text-black bg-white text-center text-xl"
+              autoFocus
+            />
+
+            <BigButton icon="✅" color="green" onClick={bevestigNaam} disabled={opslaan}>
+              {opslaan ? "Bezig..." : "Start"}
+            </BigButton>
+
+            <button
+              onClick={() => setStap("kies")}
+              className="underline opacity-80 text-sm"
+            >
+              ← Terug
+            </button>
+          </div>
+        )}
+
+        {stap === "menu" && (
+          <div className="space-y-5">
+
+            {modules?.map && (
               <BigButton
-                icon="🔵"
+                icon="🗺️"
                 color="blue"
-                onClick={() =>
-                  router.push("/join-game")
-                }
+                onClick={() => router.push("/kaart")}
               >
-                Meedoen aan Vlag Veroveren
+                Slagharen app
               </BigButton>
-            </>
-          )}
+            )}
 
-          {modules?.speurtocht && (
+            {modules?.vlag && (
+              <BigButton
+                icon="🚩"
+                color="green"
+                onClick={() => router.push("/vlag-veroveren")}
+              >
+                Vlag Veroveren
+              </BigButton>
+            )}
+
+            {modules?.speurtocht && (
+              <BigButton
+                icon="🧭"
+                color="purple"
+                onClick={() => router.push("/speurtocht")}
+              >
+                Speurtocht
+              </BigButton>
+            )}
+
+            {modules?.morse && (
+              <BigButton
+                icon="💡"
+                color="yellow"
+                onClick={() => router.push("/morse")}
+              >
+                Morse Spel
+              </BigButton>
+            )}
+
+            {modules?.noodbericht && (
+              <BigButton
+                icon="🚨"
+                color="yellow"
+                onClick={() => router.push("/noodbericht")}
+              >
+                Noodbericht
+              </BigButton>
+            )}
+
             <BigButton
-              icon="🧭"
+              icon="📖"
               color="purple"
-              onClick={() =>
-                router.push("/speurtocht")
-              }
+              onClick={() => router.push("/about")}
             >
-              Onderdeel 3: Speurtocht
+              Handleiding
             </BigButton>
-          )}
 
-          {modules?.morse && (
-            <BigButton
-              icon="💡"
-              color="yellow"
-              onClick={() =>
-                router.push("/morse")
-              }
+            <button
+              onClick={() => setStap("kies")}
+              className="underline opacity-80 text-sm block mx-auto"
             >
-              Onderdeel 4: Morse Code
-            </BigButton>
-          )}
+              ← Andere keuze
+            </button>
 
-          <BigButton
-            icon="🛠️"
-            color="yellow"
-            onClick={() =>
-              router.push("/beheer")
-            }
-          >
-            Hoofdbeheer
-          </BigButton>
-
-          <BigButton
-            icon="📖"
-            color="purple"
-            onClick={() =>
-              router.push("/about")
-            }
-          >
-            Handleiding
-          </BigButton>
-
-        </div>
+          </div>
+        )}
 
       </Card>
 

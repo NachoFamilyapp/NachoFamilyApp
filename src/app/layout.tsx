@@ -4,7 +4,6 @@ import "./globals.css";
 import GameProvider from "@/components/GameProvider";
 import ThemedBackground from "@/components/ThemedBackground";
 import UserProvider from "@/components/UserProvider";
-import RequireProfile from "@/components/RequireProfile";
 
 export const metadata: Metadata = {
   title: "Vakantie App",
@@ -41,9 +40,7 @@ export default function RootLayout({
       >
         <UserProvider>
           <GameProvider>
-            <ThemedBackground>
-              <RequireProfile>{children}</RequireProfile>
-            </ThemedBackground>
+            <ThemedBackground>{children}</ThemedBackground>
           </GameProvider>
         </UserProvider>
       </body>
