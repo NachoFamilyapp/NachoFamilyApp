@@ -2,14 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FlashStep } from "@/lib/morse";
+import { speelTreinToon } from "@/lib/trainSound";
 
 type Props = {
   sequence: FlashStep[];
   playToken: number; // verhoog dit getal om (opnieuw) af te spelen
   onDone?: () => void;
+  geluidAan?: boolean;
 };
 
-export default function MorseLight({ sequence, playToken, onDone }: Props) {
+export default function MorseLight({
+  sequence,
+  playToken,
+  onDone,
+  geluidAan,
+}: Props) {
   const [isOn, setIsOn] = useState(false);
   const [lastFinishedToken, setLastFinishedToken] = useState(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -34,8 +41,13 @@ export default function MorseLight({ sequence, playToken, onDone }: Props) {
       const step = sequence[index];
       setIsOn(step.on);
 
-      if (step.on && navigator.vibrate) {
-        navigator.vibrate(step.duration);
+      if (step.on) {
+        if (navigator.vibrate) {
+          navigator.vibrate(step.duration);
+        }
+        if (geluidAan) {
+          speelTreinToon(step.duration);
+        }
       }
 
       timeoutRef.current = setTimeout(() => playFrom(index + 1), step.duration);

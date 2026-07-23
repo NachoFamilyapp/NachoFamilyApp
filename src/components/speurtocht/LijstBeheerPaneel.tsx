@@ -7,6 +7,7 @@ import MorseLight from "@/components/morse/MorseLight";
 
 import { LijstUitdagingService } from "@/lib/lijstUitdagingService";
 import { textToFlashSequence } from "@/lib/morse";
+import { ontgrendelGeluid } from "@/lib/trainSound";
 import { LijstConfig, LijstInzending, LijstRegelStatus, LijstSoort } from "@/types/lijstUitdaging";
 
 type Props = {
@@ -27,6 +28,9 @@ export default function LijstBeheerPaneel({
   const [woordInput, setWoordInput] = useState("");
   const [flashSequence, setFlashSequence] = useState(textToFlashSequence(""));
   const [playToken, setPlayToken] = useState(0);
+  const [geluidAan, setGeluidAan] = useState(false);
+  const [verbergTijdensSeinen, setVerbergTijdensSeinen] = useState(true);
+  const [seinendIndex, setSeinendIndex] = useState<number | null>(null);
 
   async function laadAlles() {
     const [c, lijst] = await Promise.all([
@@ -75,7 +79,9 @@ export default function LijstBeheerPaneel({
     await LijstUitdagingService.setConfig(soort, next);
   }
 
-  function flashWoord(woord: string) {
+  function flashWoord(woord: string, index: number) {
+    ontgrendelGeluid();
+    setSeinendIndex(index);
     setFlashSequence(textToFlashSequence(woord));
     setPlayToken((t) => t + 1);
   }
@@ -122,6 +128,26 @@ export default function LijstBeheerPaneel({
               woorden.
             </p>
 
+            <div className="flex flex-col sm:flex-row gap-2 mb-3">
+              <button
+                onClick={() => setVerbergTijdensSeinen((v) => !v)}
+                className={`flex-1 p-3 rounded-xl font-bold ${
+                  verbergTijdensSeinen ? "bg-green-600" : "bg-white/20"
+                }`}
+              >
+                {verbergTijdensSeinen ? "🙈" : "👁️"} Verberg woord tijdens seinen
+              </button>
+
+              <button
+                onClick={() => setGeluidAan((v) => !v)}
+                className={`flex-1 p-3 rounded-xl font-bold ${
+                  geluidAan ? "bg-green-600" : "bg-white/20"
+                }`}
+              >
+                {geluidAan ? "🔊" : "🔇"} Treingeluid bij seinen
+              </button>
+            </div>
+
             <div className="flex gap-2 mb-3">
               <input
                 value={woordInput}
@@ -139,30 +165,42 @@ export default function LijstBeheerPaneel({
             </div>
 
             <div className="flex flex-col gap-2 mb-4">
-              {(config.woorden ?? []).map((woord, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2 bg-white/10 rounded-xl p-3"
-                >
-                  <span className="flex-1 font-bold">{woord}</span>
-                  <button
-                    onClick={() => flashWoord(woord)}
-                    className="bg-blue-600 px-3 py-2 rounded-lg font-bold"
+              {(config.woorden ?? []).map((woord, i) => {
+                const wordtVerborgen =
+                  verbergTijdensSeinen && seinendIndex === i && playToken > 0;
+
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 bg-white/10 rounded-xl p-3"
                   >
-                    💡 Flash
-                  </button>
-                  <button
-                    onClick={() => woordVerwijderen(i)}
-                    className="bg-red-700 px-3 py-2 rounded-lg font-bold"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              ))}
+                    <span className="flex-1 font-bold tracking-widest">
+                      {wordtVerborgen ? "🙈 " + "●".repeat(woord.length) : woord}
+                    </span>
+                    <button
+                      onClick={() => flashWoord(woord, i)}
+                      className="bg-blue-600 px-3 py-2 rounded-lg font-bold"
+                    >
+                      💡 Flash
+                    </button>
+                    <button
+                      onClick={() => woordVerwijderen(i)}
+                      className="bg-red-700 px-3 py-2 rounded-lg font-bold"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                );
+              })}
             </div>
 
             <div className="flex justify-center mb-2">
-              <MorseLight sequence={flashSequence} playToken={playToken} />
+              <MorseLight
+                sequence={flashSequence}
+                playToken={playToken}
+                geluidAan={geluidAan}
+                onDone={() => setSeinendIndex(null)}
+              />
             </div>
             <p className="text-xs opacity-70 text-center">
               Dit is jouw eigen scherm — houd &apos;m omhoog zodat spelers
