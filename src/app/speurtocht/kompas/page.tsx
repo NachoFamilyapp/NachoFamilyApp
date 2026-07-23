@@ -210,7 +210,7 @@ export default function KompasSpeurtochtPage() {
           {validCheckpoints.length}
         </div>
         <h1 className="text-2xl font-bold">
-          {checkpoint.emoji} Op zoek naar {checkpoint.targetName}
+          {checkpoint.emoji} Volg het kompas naar de volgende plek
         </h1>
       </div>
 
@@ -245,8 +245,7 @@ export default function KompasSpeurtochtPage() {
 
         {!arrived && (
           <p className="text-sm opacity-80 mt-3 text-center">
-            🔒 Loop eerst naar {checkpoint.targetName} om te kunnen
-            antwoorden.
+            🔒 Loop eerst naar je bestemming om het te kunnen beantwoorden.
           </p>
         )}
 
