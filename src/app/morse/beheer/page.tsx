@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import PasswordGate from "@/components/PasswordGate";
 import MorseLight from "@/components/morse/MorseLight";
+import SnelheidSlider, { MORSE_SNELHEDEN } from "@/components/morse/SnelheidSlider";
 
 import { MorseGameService } from "@/lib/morseService";
 import { textToFlashSequence } from "@/lib/morse";
@@ -29,19 +30,20 @@ function MorseSpelBeheerPanel() {
   const router = useRouter();
 
   const [word, setWord] = useState("");
+  const [niveau, setNiveau] = useState(2);
   const [sending, setSending] = useState(false);
   const [playToken, setPlayToken] = useState(0);
   const [sent, setSent] = useState(false);
 
   const cleanWord = word.trim().toUpperCase().replace(/\s+/g, "");
-  const sequence = textToFlashSequence(cleanWord);
+  const sequence = textToFlashSequence(cleanWord, MORSE_SNELHEDEN[niveau].eenheid);
 
   async function verstuur() {
     if (!cleanWord) return;
 
     setSending(true);
     try {
-      await MorseGameService.stuurWoord(cleanWord);
+      await MorseGameService.stuurWoord(cleanWord, MORSE_SNELHEDEN[niveau].eenheid);
       setSent(true);
       setTimeout(() => setSent(false), 3000);
     } catch (error) {
@@ -81,6 +83,10 @@ function MorseSpelBeheerPanel() {
                 .join(" ")}
             </p>
           )}
+
+          <div className="mb-4">
+            <SnelheidSlider niveau={niveau} onChange={setNiveau} />
+          </div>
 
           <div className="flex justify-center mb-4">
             <MorseLight sequence={sequence} playToken={playToken} />

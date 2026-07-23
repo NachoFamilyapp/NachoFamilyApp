@@ -14,6 +14,7 @@ export default function MorseSpelPage() {
 
   const [word, setWord] = useState("");
   const [sentAt, setSentAt] = useState(0);
+  const [eenheid, setEenheid] = useState(180);
   const [playToken, setPlayToken] = useState(0);
   const [guess, setGuess] = useState<string[]>([]);
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
@@ -23,6 +24,7 @@ export default function MorseSpelPage() {
       if (broadcast.sentAt !== sentAt && broadcast.sentAt > 0) {
         setWord(broadcast.word);
         setSentAt(broadcast.sentAt);
+        setEenheid(broadcast.eenheid);
         setGuess([]);
         setResult(null);
         setPlayToken((t) => t + 1);
@@ -33,7 +35,10 @@ export default function MorseSpelPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const sequence = useMemo(() => textToFlashSequence(word), [word]);
+  const sequence = useMemo(
+    () => textToFlashSequence(word, eenheid),
+    [word, eenheid]
+  );
 
   function letterTyped(letter: string) {
     if (result === "correct") return;

@@ -10,14 +10,19 @@ export class MorseGameService {
     const snapshot = await getDoc(WOORD_DOC);
 
     if (!snapshot.exists()) {
-      return { word: "", sentAt: 0 };
+      return { word: "", sentAt: 0, eenheid: 180 };
     }
 
-    return snapshot.data() as MorseWoordBroadcast;
+    const data = snapshot.data();
+    return {
+      word: data.word ?? "",
+      sentAt: data.sentAt ?? 0,
+      eenheid: data.eenheid ?? 180,
+    };
   }
 
-  static async stuurWoord(word: string) {
-    await setDoc(WOORD_DOC, { word, sentAt: Date.now() });
+  static async stuurWoord(word: string, eenheid: number) {
+    await setDoc(WOORD_DOC, { word, sentAt: Date.now(), eenheid });
   }
 
   static subscribeToWoord(
@@ -25,11 +30,16 @@ export class MorseGameService {
   ) {
     return onSnapshot(WOORD_DOC, (snapshot) => {
       if (!snapshot.exists()) {
-        callback({ word: "", sentAt: 0 });
+        callback({ word: "", sentAt: 0, eenheid: 180 });
         return;
       }
 
-      callback(snapshot.data() as MorseWoordBroadcast);
+      const data = snapshot.data();
+      callback({
+        word: data.word ?? "",
+        sentAt: data.sentAt ?? 0,
+        eenheid: data.eenheid ?? 180,
+      });
     });
   }
 }

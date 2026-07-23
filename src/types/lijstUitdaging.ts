@@ -6,12 +6,14 @@ export interface LijstConfig {
   woorden?: string[]; // alleen gebruikt bij "puntofstreep"
 }
 
+export type LijstRegelStatus = "onbeoordeeld" | "goedgekeurd" | "afgekeurd";
+
 export interface LijstInzending {
   soort: LijstSoort;
   userId: string;
   userName: string;
   team: string;
   regels: string[];
-  goedgekeurd: boolean[];
+  status: LijstRegelStatus[];
   submittedAt: number;
 }

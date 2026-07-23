@@ -7,7 +7,7 @@ import MorseLight from "@/components/morse/MorseLight";
 
 import { LijstUitdagingService } from "@/lib/lijstUitdagingService";
 import { textToFlashSequence } from "@/lib/morse";
-import { LijstConfig, LijstInzending, LijstSoort } from "@/types/lijstUitdaging";
+import { LijstConfig, LijstInzending, LijstRegelStatus, LijstSoort } from "@/types/lijstUitdaging";
 
 type Props = {
   soort: LijstSoort;
@@ -80,23 +80,27 @@ export default function LijstBeheerPaneel({
     setPlayToken((t) => t + 1);
   }
 
-  function toggleGoedkeuring(inzending: LijstInzending, lineIndex: number) {
-    const goedgekeurd = inzending.goedgekeurd.map((v, i) =>
-      i === lineIndex ? !v : v
+  function zetStatus(
+    inzending: LijstInzending,
+    lineIndex: number,
+    status: LijstRegelStatus
+  ) {
+    const nieuweStatus = inzending.status.map((v, i) =>
+      i === lineIndex ? (v === status ? "onbeoordeeld" : status) : v
     );
 
     setInzendingen((list) =>
       list.map((i) =>
-        i.userId === inzending.userId ? { ...i, goedgekeurd } : i
+        i.userId === inzending.userId ? { ...i, status: nieuweStatus } : i
       )
     );
   }
 
-  async function opslaanGoedkeuring(inzending: LijstInzending) {
-    await LijstUitdagingService.setGoedkeuring(
+  async function opslaanBeoordeling(inzending: LijstInzending) {
+    await LijstUitdagingService.setStatus(
       soort,
       inzending.userId,
-      inzending.goedgekeurd
+      inzending.status
     );
     alert("✅ Beoordeling opgeslagen");
   }
@@ -213,29 +217,51 @@ export default function LijstBeheerPaneel({
             >
               <div className="font-bold mb-2">
                 {inzending.userName} ({inzending.team}) ·{" "}
-                {inzending.goedgekeurd.filter(Boolean).length} van{" "}
-                {inzending.regels.length} goedgekeurd
+                {inzending.status.filter((s) => s === "goedgekeurd").length}{" "}
+                van {inzending.regels.length} goedgekeurd
               </div>
 
               <div className="flex flex-col gap-1 mb-3">
-                {inzending.regels.map((regel, i) => (
-                  <label
-                    key={i}
-                    className="flex items-center gap-2 bg-white/10 rounded-lg p-2"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={inzending.goedgekeurd[i] ?? false}
-                      onChange={() => toggleGoedkeuring(inzending, i)}
-                      className="w-5 h-5"
-                    />
-                    <span>{regel || <em className="opacity-50">leeg</em>}</span>
-                  </label>
-                ))}
+                {inzending.regels.map((regel, i) => {
+                  const status = inzending.status[i] ?? "onbeoordeeld";
+
+                  return (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 bg-white/10 rounded-lg p-2"
+                    >
+                      <span className="flex-1">
+                        {regel || <em className="opacity-50">leeg</em>}
+                      </span>
+
+                      <button
+                        onClick={() => zetStatus(inzending, i, "goedgekeurd")}
+                        className={`px-3 py-2 rounded-lg font-bold ${
+                          status === "goedgekeurd"
+                            ? "bg-green-600"
+                            : "bg-white/20"
+                        }`}
+                      >
+                        ✅
+                      </button>
+
+                      <button
+                        onClick={() => zetStatus(inzending, i, "afgekeurd")}
+                        className={`px-3 py-2 rounded-lg font-bold ${
+                          status === "afgekeurd"
+                            ? "bg-red-600"
+                            : "bg-white/20"
+                        }`}
+                      >
+                        ❌
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
 
               <button
-                onClick={() => opslaanGoedkeuring(inzending)}
+                onClick={() => opslaanBeoordeling(inzending)}
                 className="w-full bg-green-600 rounded-xl p-2 font-bold"
               >
                 💾 Beoordeling opslaan
