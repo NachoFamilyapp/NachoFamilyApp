@@ -32,6 +32,9 @@ export default function LijstSpelerFormulier({
 
   const [team, setTeam] = useState(() => getStoredSpeurtochtTeam());
   const [aantalRegels, setAantalRegels] = useState<number | null>(null);
+  const [hintFotos, setHintFotos] = useState<string[]>([]);
+  const [hintOpen, setHintOpen] = useState(false);
+  const [hintIndex, setHintIndex] = useState(0);
   const [regels, setRegels] = useState<string[]>([]);
   const [ingezonden, setIngezonden] = useState(false);
   const [laden, setLaden] = useState(true);
@@ -45,6 +48,7 @@ export default function LijstSpelerFormulier({
       LijstUitdagingService.getEigenInzending(soort, uid),
     ]).then(([config, inzending]) => {
       setAantalRegels(config.aantalRegels);
+      setHintFotos(config.hintFotos ?? []);
 
       if (inzending) {
         setRegels(inzending.regels);
@@ -114,6 +118,18 @@ export default function LijstSpelerFormulier({
         <p className="opacity-80 text-sm mt-1">{uitleg}</p>
       </div>
 
+      {hintFotos.length > 0 && (
+        <button
+          onClick={() => {
+            setHintIndex(0);
+            setHintOpen(true);
+          }}
+          className="bg-yellow-600 px-5 py-3 rounded-xl font-bold"
+        >
+          💡 Bekijk hint
+        </button>
+      )}
+
       <Card className="w-full max-w-sm text-white">
         <div className="flex flex-col gap-2">
           {regels.map((waarde, i) => (
@@ -144,6 +160,45 @@ export default function LijstSpelerFormulier({
       <button onClick={() => router.push("/speurtocht")} className="underline opacity-80">
         ← Terug
       </button>
+
+      {hintOpen && (
+        <div
+          className="fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-4"
+          onClick={() => setHintOpen(false)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={hintFotos[hintIndex]}
+            alt={`Hint ${hintIndex + 1}`}
+            className="max-w-full max-h-[75vh] rounded-xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {hintFotos.length > 1 && (
+            <div className="flex gap-2 mt-4">
+              {hintFotos.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setHintIndex(i);
+                  }}
+                  className={`w-3 h-3 rounded-full ${
+                    i === hintIndex ? "bg-white" : "bg-white/40"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+
+          <button
+            onClick={() => setHintOpen(false)}
+            className="mt-6 bg-white/20 px-6 py-3 rounded-xl font-bold text-white"
+          >
+            ✕ Sluiten
+          </button>
+        </div>
+      )}
     </main>
   );
 }

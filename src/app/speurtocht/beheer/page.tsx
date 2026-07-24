@@ -128,6 +128,7 @@ function BeheerPanel() {
             soort="puntofstreep"
             titel="🔦 Punt of Streep"
             toonWoordenLijst
+            toonHintKnop
           />
         )}
         {tab === "geheimschrift" && (
@@ -135,6 +136,7 @@ function BeheerPanel() {
             soort="geheimschrift"
             titel="📜 Geheimschrift"
             vasteRegels={1}
+            toonHintKnop
           />
         )}
       </div>

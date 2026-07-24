@@ -4,6 +4,7 @@ export interface LijstConfig {
   aantalRegels: number;
   puntenPerRegel: number;
   woorden?: string[]; // alleen gebruikt bij "puntofstreep"
+  hintFotos?: string[]; // optionele hint-afbeeldingen voor spelers
 }
 
 export type LijstRegelStatus = "onbeoordeeld" | "goedgekeurd" | "afgekeurd";

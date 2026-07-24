@@ -8,12 +8,19 @@ import MorseLight from "@/components/morse/MorseLight";
 import { LijstUitdagingService } from "@/lib/lijstUitdagingService";
 import { textToFlashSequence } from "@/lib/morse";
 import { ontgrendelGeluid } from "@/lib/trainSound";
-import { LijstConfig, LijstInzending, LijstRegelStatus, LijstSoort } from "@/types/lijstUitdaging";
+import { compressImageForStorage } from "@/lib/imageUtils";
+import {
+  LijstConfig,
+  LijstInzending,
+  LijstRegelStatus,
+  LijstSoort,
+} from "@/types/lijstUitdaging";
 
 type Props = {
   soort: LijstSoort;
   titel: string;
   toonWoordenLijst?: boolean;
+  toonHintKnop?: boolean;
   vasteRegels?: number;
 };
 
@@ -21,62 +28,90 @@ export default function LijstBeheerPaneel({
   soort,
   titel,
   toonWoordenLijst,
+  toonHintKnop,
   vasteRegels,
 }: Props) {
   const [config, setConfig] = useState<LijstConfig | null>(null);
   const [inzendingen, setInzendingen] = useState<LijstInzending[]>([]);
+  const [laden, setLaden] = useState(true);
+
   const [woordInput, setWoordInput] = useState("");
-  const [flashSequence, setFlashSequence] = useState(textToFlashSequence(""));
+  const [flashSequence, setFlashSequence] = useState<ReturnType<typeof textToFlashSequence>>([]);
   const [playToken, setPlayToken] = useState(0);
   const [geluidAan, setGeluidAan] = useState(false);
   const [verbergTijdensSeinen, setVerbergTijdensSeinen] = useState(true);
   const [seinendIndex, setSeinendIndex] = useState<number | null>(null);
 
-  async function laadAlles() {
-    const [c, lijst] = await Promise.all([
-      LijstUitdagingService.getConfig(soort),
-      LijstUitdagingService.getInzendingen(soort),
-    ]);
-    setConfig(c);
-    setInzendingen(lijst);
-  }
+  const [hintUploading, setHintUploading] = useState(false);
 
   useEffect(() => {
-    // laadAlles() is async; state-updates gebeuren na een await.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    let actief = true;
+
+    async function laadAlles() {
+      try {
+        const [c, lijst] = await Promise.all([
+          LijstUitdagingService.getConfig(soort),
+          LijstUitdagingService.getInzendingen(soort),
+        ]);
+
+        if (!actief) return;
+
+        setConfig(c);
+        setInzendingen(lijst);
+      } catch (error) {
+        console.error("Kon Punt of Streep / Herinner-gegevens niet laden:", error);
+      } finally {
+        if (actief) setLaden(false);
+      }
+    }
+
     laadAlles();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  async function opslaanAantalRegels(n: number) {
-    if (!config) return;
-    const next = { ...config, aantalRegels: n };
-    setConfig(next);
-    await LijstUitdagingService.setConfig(soort, next);
+    return () => {
+      actief = false;
+    };
+  }, [soort]);
+
+  async function herlaadInzendingen() {
+    try {
+      const lijst = await LijstUitdagingService.getInzendingen(soort);
+      setInzendingen(lijst);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
-  async function opslaanPuntenPerRegel(n: number) {
-    if (!config) return;
-    const next = { ...config, puntenPerRegel: n };
+  async function opslaanConfig(next: LijstConfig) {
     setConfig(next);
-    await LijstUitdagingService.setConfig(soort, next);
+    try {
+      await LijstUitdagingService.setConfig(soort, next);
+    } catch (error) {
+      console.error(error);
+      alert("Opslaan mislukt. Probeer het nog eens.");
+    }
   }
 
-  async function woordToevoegen() {
+  function opslaanAantalRegels(n: number) {
+    if (!config) return;
+    opslaanConfig({ ...config, aantalRegels: Math.max(1, n) });
+  }
+
+  function opslaanPuntenPerRegel(n: number) {
+    if (!config) return;
+    opslaanConfig({ ...config, puntenPerRegel: Math.max(1, n) });
+  }
+
+  function woordToevoegen() {
     if (!config || !woordInput.trim()) return;
     const woorden = [...(config.woorden ?? []), woordInput.trim().toUpperCase()];
-    const next = { ...config, woorden, aantalRegels: woorden.length };
-    setConfig(next);
+    opslaanConfig({ ...config, woorden, aantalRegels: woorden.length });
     setWoordInput("");
-    await LijstUitdagingService.setConfig(soort, next);
   }
 
-  async function woordVerwijderen(index: number) {
+  function woordVerwijderen(index: number) {
     if (!config) return;
     const woorden = (config.woorden ?? []).filter((_, i) => i !== index);
-    const next = { ...config, woorden, aantalRegels: woorden.length };
-    setConfig(next);
-    await LijstUitdagingService.setConfig(soort, next);
+    opslaanConfig({ ...config, woorden, aantalRegels: woorden.length });
   }
 
   function flashWoord(woord: string, index: number) {
@@ -84,6 +119,34 @@ export default function LijstBeheerPaneel({
     setSeinendIndex(index);
     setFlashSequence(textToFlashSequence(woord));
     setPlayToken((t) => t + 1);
+  }
+
+  async function hintFotoToevoegen(file: File) {
+    if (!config) return;
+
+    setHintUploading(true);
+    try {
+      const { dataUrl, withinLimit } = await compressImageForStorage(file);
+
+      if (!withinLimit) {
+        alert("❌ Deze foto is te groot/gedetailleerd. Kies een andere foto.");
+        return;
+      }
+
+      const hintFotos = [...(config.hintFotos ?? []), dataUrl];
+      await opslaanConfig({ ...config, hintFotos });
+    } catch (error) {
+      console.error(error);
+      alert("Foto uploaden mislukt.");
+    } finally {
+      setHintUploading(false);
+    }
+  }
+
+  function hintFotoVerwijderen(index: number) {
+    if (!config) return;
+    const hintFotos = (config.hintFotos ?? []).filter((_, i) => i !== index);
+    opslaanConfig({ ...config, hintFotos });
   }
 
   function zetStatus(
@@ -103,15 +166,38 @@ export default function LijstBeheerPaneel({
   }
 
   async function opslaanBeoordeling(inzending: LijstInzending) {
-    await LijstUitdagingService.setStatus(
-      soort,
-      inzending.userId,
-      inzending.status
-    );
-    alert("✅ Beoordeling opgeslagen");
+    try {
+      await LijstUitdagingService.setStatus(
+        soort,
+        inzending.userId,
+        inzending.status
+      );
+      alert("✅ Beoordeling opgeslagen");
+    } catch (error) {
+      console.error(error);
+      alert("Opslaan van beoordeling mislukt.");
+    }
   }
 
-  if (!config) {
+  async function verwijderInzending(inzending: LijstInzending) {
+    if (
+      !confirm(
+        `Inzending van ${inzending.userName} (${inzending.team}) verwijderen? Dit kan niet ongedaan gemaakt worden.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await LijstUitdagingService.deleteInzending(soort, inzending.userId);
+      await herlaadInzendingen();
+    } catch (error) {
+      console.error(error);
+      alert("Verwijderen mislukt.");
+    }
+  }
+
+  if (laden || !config) {
     return <p className="text-center opacity-80 py-10">Laden...</p>;
   }
 
@@ -238,6 +324,52 @@ export default function LijstBeheerPaneel({
         </div>
       </Card>
 
+      {toonHintKnop && (
+        <Card className="text-white">
+          <h3 className="text-lg font-bold mb-2">💡 Hint-foto&apos;s voor spelers</h3>
+          <p className="opacity-80 text-sm mb-3">
+            Spelers kunnen deze foto&apos;s bekijken als hulpje. Je kunt er
+            meerdere toevoegen.
+          </p>
+
+          <div className="flex flex-wrap gap-2 mb-3">
+            {(config.hintFotos ?? []).map((foto, i) => (
+              <div key={i} className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={foto}
+                  alt={`Hint ${i + 1}`}
+                  className="w-20 h-20 object-cover rounded-lg"
+                />
+                <button
+                  onClick={() => hintFotoVerwijderen(i)}
+                  className="absolute -top-2 -right-2 bg-red-700 rounded-full w-6 h-6 text-sm font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <label className="block">
+            <span className="block bg-blue-600 rounded-xl p-3 text-center font-bold cursor-pointer">
+              {hintUploading ? "Bezig..." : "📷 Hint-foto toevoegen"}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={hintUploading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) hintFotoToevoegen(file);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        </Card>
+      )}
+
       <Card className="text-white">
         <h3 className="text-lg font-bold mb-3">
           🗂️ Inzendingen ({inzendingen.length})
@@ -298,12 +430,21 @@ export default function LijstBeheerPaneel({
                 })}
               </div>
 
-              <button
-                onClick={() => opslaanBeoordeling(inzending)}
-                className="w-full bg-green-600 rounded-xl p-2 font-bold"
-              >
-                💾 Beoordeling opslaan
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => opslaanBeoordeling(inzending)}
+                  className="flex-1 bg-green-600 rounded-xl p-2 font-bold"
+                >
+                  💾 Beoordeling opslaan
+                </button>
+
+                <button
+                  onClick={() => verwijderInzending(inzending)}
+                  className="bg-red-700 rounded-xl px-4 font-bold"
+                >
+                  🗑️
+                </button>
+              </div>
             </div>
           ))}
         </div>

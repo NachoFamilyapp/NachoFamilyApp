@@ -2,6 +2,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  deleteDoc,
   collection,
   getDocs,
   query,
@@ -99,6 +100,10 @@ export class LijstUitdagingService {
       { status },
       { merge: true }
     );
+  }
+
+  static async deleteInzending(soort: LijstSoort, userId: string) {
+    await deleteDoc(doc(INZENDINGEN_COL, inzendingId(soort, userId)));
   }
 
   static async getTeamPunten(soort: LijstSoort, team: string): Promise<number> {
