@@ -7,7 +7,7 @@ import Card from "@/components/ui/Card";
 import BigButton from "@/components/ui/BigButton";
 import MorseLight from "@/components/morse/MorseLight";
 
-import { MorseService } from "@/lib/morseService";
+import { MorseGameService } from "@/lib/morseService";
 import { textToFlashSequence } from "@/lib/morse";
 
 export default function MorseLivePage() {
@@ -20,8 +20,8 @@ export default function MorseLivePage() {
   const [guess, setGuess] = useState("");
 
   useEffect(() => {
-    const unsubscribe = MorseService.subscribeToBroadcast((broadcast) => {
-      setMessage(broadcast.message);
+    const unsubscribe = MorseGameService.subscribeToWoord((broadcast) => {
+      setMessage(broadcast.word);
 
       if (broadcast.sentAt !== sentAt && broadcast.sentAt > 0) {
         setSentAt(broadcast.sentAt);
