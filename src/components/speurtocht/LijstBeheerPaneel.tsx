@@ -3,11 +3,8 @@
 import { useEffect, useState } from "react";
 
 import Card from "@/components/ui/Card";
-import MorseLight from "@/components/morse/MorseLight";
 
 import { LijstUitdagingService } from "@/lib/lijstUitdagingService";
-import { textToFlashSequence } from "@/lib/morse";
-import { ontgrendelGeluid } from "@/lib/trainSound";
 import { compressImageForStorage } from "@/lib/imageUtils";
 import {
   LijstConfig,
@@ -19,7 +16,6 @@ import {
 type Props = {
   soort: LijstSoort;
   titel: string;
-  toonWoordenLijst?: boolean;
   toonHintKnop?: boolean;
   vasteRegels?: number;
 };
@@ -27,21 +23,12 @@ type Props = {
 export default function LijstBeheerPaneel({
   soort,
   titel,
-  toonWoordenLijst,
   toonHintKnop,
   vasteRegels,
 }: Props) {
   const [config, setConfig] = useState<LijstConfig | null>(null);
   const [inzendingen, setInzendingen] = useState<LijstInzending[]>([]);
   const [laden, setLaden] = useState(true);
-
-  const [woordInput, setWoordInput] = useState("");
-  const [flashSequence, setFlashSequence] = useState<ReturnType<typeof textToFlashSequence>>([]);
-  const [playToken, setPlayToken] = useState(0);
-  const [geluidAan, setGeluidAan] = useState(false);
-  const [verbergTijdensSeinen, setVerbergTijdensSeinen] = useState(true);
-  const [seinendIndex, setSeinendIndex] = useState<number | null>(null);
-
   const [hintUploading, setHintUploading] = useState(false);
 
   useEffect(() => {
@@ -59,7 +46,7 @@ export default function LijstBeheerPaneel({
         setConfig(c);
         setInzendingen(lijst);
       } catch (error) {
-        console.error("Kon Punt of Streep / Herinner-gegevens niet laden:", error);
+        console.error(`Kon ${soort}-gegevens niet laden:`, error);
       } finally {
         if (actief) setLaden(false);
       }
@@ -99,26 +86,6 @@ export default function LijstBeheerPaneel({
   function opslaanPuntenPerRegel(n: number) {
     if (!config) return;
     opslaanConfig({ ...config, puntenPerRegel: Math.max(1, n) });
-  }
-
-  function woordToevoegen() {
-    if (!config || !woordInput.trim()) return;
-    const woorden = [...(config.woorden ?? []), woordInput.trim().toUpperCase()];
-    opslaanConfig({ ...config, woorden, aantalRegels: woorden.length });
-    setWoordInput("");
-  }
-
-  function woordVerwijderen(index: number) {
-    if (!config) return;
-    const woorden = (config.woorden ?? []).filter((_, i) => i !== index);
-    opslaanConfig({ ...config, woorden, aantalRegels: woorden.length });
-  }
-
-  function flashWoord(woord: string, index: number) {
-    ontgrendelGeluid();
-    setSeinendIndex(index);
-    setFlashSequence(textToFlashSequence(woord));
-    setPlayToken((t) => t + 1);
   }
 
   async function hintFotoToevoegen(file: File) {
@@ -167,11 +134,7 @@ export default function LijstBeheerPaneel({
 
   async function opslaanBeoordeling(inzending: LijstInzending) {
     try {
-      await LijstUitdagingService.setStatus(
-        soort,
-        inzending.userId,
-        inzending.status
-      );
+      await LijstUitdagingService.setStatus(soort, inzending.userId, inzending.status);
       alert("✅ Beoordeling opgeslagen");
     } catch (error) {
       console.error(error);
@@ -182,7 +145,7 @@ export default function LijstBeheerPaneel({
   async function verwijderInzending(inzending: LijstInzending) {
     if (
       !confirm(
-        `Inzending van ${inzending.userName} (${inzending.team}) verwijderen? Dit kan niet ongedaan gemaakt worden.`
+        `Inzending van ${inzending.userName} (${inzending.team}) verwijderen?`
       )
     ) {
       return;
@@ -206,111 +169,21 @@ export default function LijstBeheerPaneel({
       <Card className="text-white">
         <h2 className="text-xl font-bold mb-3">{titel}</h2>
 
-        {toonWoordenLijst ? (
-          <>
-            <p className="opacity-80 text-sm mb-3">
-              Voeg de woorden toe die je in morsecode gaat seinen. Het
-              aantal regels voor spelers volgt automatisch uit het aantal
-              woorden.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-2 mb-3">
-              <button
-                onClick={() => setVerbergTijdensSeinen((v) => !v)}
-                className={`flex-1 p-3 rounded-xl font-bold ${
-                  verbergTijdensSeinen ? "bg-green-600" : "bg-white/20"
-                }`}
-              >
-                {verbergTijdensSeinen ? "🙈" : "👁️"} Verberg woord tijdens seinen
-              </button>
-
-              <button
-                onClick={() => setGeluidAan((v) => !v)}
-                className={`flex-1 p-3 rounded-xl font-bold ${
-                  geluidAan ? "bg-green-600" : "bg-white/20"
-                }`}
-              >
-                {geluidAan ? "🔊" : "🔇"} Treingeluid bij seinen
-              </button>
-            </div>
-
-            <div className="flex gap-2 mb-3">
-              <input
-                value={woordInput}
-                onChange={(e) => setWoordInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && woordToevoegen()}
-                placeholder="Nieuw woord"
-                className="flex-1 rounded-xl p-3 text-black bg-white"
-              />
-              <button
-                onClick={woordToevoegen}
-                className="bg-green-600 rounded-xl px-4 font-bold"
-              >
-                ➕
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-2 mb-4">
-              {(config.woorden ?? []).map((woord, i) => {
-                const wordtVerborgen =
-                  verbergTijdensSeinen && seinendIndex === i && playToken > 0;
-
-                return (
-                  <div
-                    key={i}
-                    className="flex items-center gap-2 bg-white/10 rounded-xl p-3"
-                  >
-                    <span className="flex-1 font-bold tracking-widest">
-                      {wordtVerborgen ? "🙈 " + "●".repeat(woord.length) : woord}
-                    </span>
-                    <button
-                      onClick={() => flashWoord(woord, i)}
-                      className="bg-blue-600 px-3 py-2 rounded-lg font-bold"
-                    >
-                      💡 Flash
-                    </button>
-                    <button
-                      onClick={() => woordVerwijderen(i)}
-                      className="bg-red-700 px-3 py-2 rounded-lg font-bold"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="flex justify-center mb-2">
-              <MorseLight
-                sequence={flashSequence}
-                playToken={playToken}
-                geluidAan={geluidAan}
-                onDone={() => setSeinendIndex(null)}
-              />
-            </div>
-            <p className="text-xs opacity-70 text-center">
-              Dit is jouw eigen scherm — houd &apos;m omhoog zodat spelers
-              het licht kunnen zien. Een woord mag je zo vaak opnieuw
-              flashen als je wilt.
-            </p>
-          </>
-        ) : (
-          <div className="flex flex-col gap-3">
-            <div>
-              <label className="block font-bold mb-1">
-                Aantal regels voor spelers
-              </label>
-              <input
-                type="number"
-                min={1}
-                value={vasteRegels ?? config.aantalRegels}
-                disabled={!!vasteRegels}
-                onChange={(e) => opslaanAantalRegels(Number(e.target.value) || 1)}
-                className="w-full rounded-xl p-3 text-black bg-white disabled:opacity-60"
-              />
-            </div>
+        <div className="flex flex-col gap-3">
+          <div>
+            <label className="block font-bold mb-1">
+              Aantal regels voor spelers
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={vasteRegels ?? config.aantalRegels}
+              disabled={!!vasteRegels}
+              onChange={(e) => opslaanAantalRegels(Number(e.target.value) || 1)}
+              className="w-full rounded-xl p-3 text-black bg-white disabled:opacity-60"
+            />
           </div>
-        )}
+        </div>
 
         <div className="mt-3">
           <label className="block font-bold mb-1">Punten per goedgekeurde regel</label>
@@ -381,14 +254,11 @@ export default function LijstBeheerPaneel({
 
         <div className="flex flex-col gap-4">
           {inzendingen.map((inzending) => (
-            <div
-              key={inzending.userId}
-              className="bg-white/10 rounded-xl p-3"
-            >
+            <div key={inzending.userId} className="bg-white/10 rounded-xl p-3">
               <div className="font-bold mb-2">
                 {inzending.userName} ({inzending.team}) ·{" "}
-                {inzending.status.filter((s) => s === "goedgekeurd").length}{" "}
-                van {inzending.regels.length} goedgekeurd
+                {inzending.status.filter((s) => s === "goedgekeurd").length} van{" "}
+                {inzending.regels.length} goedgekeurd
               </div>
 
               <div className="flex flex-col gap-1 mb-3">
@@ -396,10 +266,7 @@ export default function LijstBeheerPaneel({
                   const status = inzending.status[i] ?? "onbeoordeeld";
 
                   return (
-                    <div
-                      key={i}
-                      className="flex items-center gap-2 bg-white/10 rounded-lg p-2"
-                    >
+                    <div key={i} className="flex items-center gap-2 bg-white/10 rounded-lg p-2">
                       <span className="flex-1">
                         {regel || <em className="opacity-50">leeg</em>}
                       </span>
@@ -407,9 +274,7 @@ export default function LijstBeheerPaneel({
                       <button
                         onClick={() => zetStatus(inzending, i, "goedgekeurd")}
                         className={`px-3 py-2 rounded-lg font-bold ${
-                          status === "goedgekeurd"
-                            ? "bg-green-600"
-                            : "bg-white/20"
+                          status === "goedgekeurd" ? "bg-green-600" : "bg-white/20"
                         }`}
                       >
                         ✅
@@ -418,9 +283,7 @@ export default function LijstBeheerPaneel({
                       <button
                         onClick={() => zetStatus(inzending, i, "afgekeurd")}
                         className={`px-3 py-2 rounded-lg font-bold ${
-                          status === "afgekeurd"
-                            ? "bg-red-600"
-                            : "bg-white/20"
+                          status === "afgekeurd" ? "bg-red-600" : "bg-white/20"
                         }`}
                       >
                         ❌

@@ -21,6 +21,7 @@ import {
 } from "@/types/speurtocht";
 
 import LijstBeheerPaneel from "@/components/speurtocht/LijstBeheerPaneel";
+import PuntOfStreepBeheerPaneel from "@/components/speurtocht/PuntOfStreepBeheerPaneel";
 
 const KompasMapPicker = dynamic(
   () => import("@/components/speurtocht/KompasMapPicker"),
@@ -123,14 +124,7 @@ function BeheerPanel() {
         {tab === "herinner" && (
           <LijstBeheerPaneel soort="herinner" titel="🧠 Herinner de objecten" />
         )}
-        {tab === "puntofstreep" && (
-          <LijstBeheerPaneel
-            soort="puntofstreep"
-            titel="🔦 Punt of Streep"
-            toonWoordenLijst
-            toonHintKnop
-          />
-        )}
+        {tab === "puntofstreep" && <PuntOfStreepBeheerPaneel />}
         {tab === "geheimschrift" && (
           <LijstBeheerPaneel
             soort="geheimschrift"

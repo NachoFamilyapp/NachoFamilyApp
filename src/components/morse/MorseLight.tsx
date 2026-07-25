@@ -9,6 +9,7 @@ type Props = {
   playToken: number; // verhoog dit getal om (opnieuw) af te spelen
   onDone?: () => void;
   geluidAan?: boolean;
+  verbergLicht?: boolean;
 };
 
 export default function MorseLight({
@@ -16,6 +17,7 @@ export default function MorseLight({
   playToken,
   onDone,
   geluidAan,
+  verbergLicht,
 }: Props) {
   const [isOn, setIsOn] = useState(false);
   const [lastFinishedToken, setLastFinishedToken] = useState(0);
@@ -64,13 +66,19 @@ export default function MorseLight({
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div
-        className={`w-48 h-48 rounded-full transition-all duration-75 ${
-          isOn
-            ? "bg-yellow-300 shadow-[0_0_80px_30px_rgba(253,224,71,0.8)]"
-            : "bg-gray-700"
-        }`}
-      />
+      {verbergLicht ? (
+        <div className="w-48 h-48 rounded-full bg-gray-800 flex items-center justify-center text-5xl">
+          🔊
+        </div>
+      ) : (
+        <div
+          className={`w-48 h-48 rounded-full transition-all duration-75 ${
+            isOn
+              ? "bg-yellow-300 shadow-[0_0_80px_30px_rgba(253,224,71,0.8)]"
+              : "bg-gray-700"
+          }`}
+        />
+      )}
       {playing && (
         <p className="text-sm opacity-80">📡 Bezig met seinen...</p>
       )}
